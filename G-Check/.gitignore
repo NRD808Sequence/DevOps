@@ -1,0 +1,25 @@
+# Terraform
+.terraform/
+*.tfstate
+*.tfstate.*
+*.tfplan
+tfplan
+tfplan.txt
+.terraform.lock.hcl
+
+# Secrets — never commit
+*.tfvars
+!*.tfvars.example
+
+# OS
+.DS_Store
+**/.DS_Store
+
+# Claude session files
+.claude/
+**/.claude/
+
+# Build artifacts
+**/lambda/*.zip
+**/python/gate_*.json
+**/*.jar

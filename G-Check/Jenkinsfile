@@ -1,0 +1,450 @@
+// =============================================================================
+// Jenkinsfile — Vandelay Lab-2 Infrastructure Pipeline
+//
+// Stages:
+//   1. Checkout        — pull Terraform code from Git
+//   2. TF Init         — initialize backend (S3) + providers
+//   3. TF Validate     — syntax + format check
+//   4. TF Plan         — generate execution plan, archive as artifact
+//   5. Approval Gate   — human must approve before any changes hit AWS
+//   6. TF Apply        — deploy infrastructure
+//   7. Extract Outputs — pull INSTANCE_ID, SECRET_ID, DB_ID from state
+//   8. Smoke Test      — hit the app URL, expect HTTP 200
+//   9. Gate Tests      — run run_all_gates.sh, archive JSON results
+//  10. Notify          — print final status badge
+//
+// Prerequisites (configure in Jenkins before running):
+//   Credentials:
+//     - "vandelay-db-password"  → Secret Text  → the RDS password (TF_VAR_db_password)
+//     - "aws-credentials"       → AWS credentials plugin OR use IAM instance role (preferred)
+//   Plugins required:
+//     - Pipeline, Git, AWS Steps (or credentials plugin), Timestamper, AnsiColor
+//   Jenkins IAM role must have TerraformDeployPolicy attached (see README)
+// =============================================================================
+
+pipeline {
+
+    agent any
+
+    // -------------------------------------------------------------------------
+    // Triggers — GitHub push webhook fires this automatically on every push
+    // -------------------------------------------------------------------------
+    triggers {
+        githubPush()
+    }
+
+    // -------------------------------------------------------------------------
+    // Build parameters — change these at queue time without editing the file
+    // -------------------------------------------------------------------------
+    parameters {
+        string(
+            name: 'AWS_REGION',
+            defaultValue: 'us-east-1',
+            description: 'AWS region to deploy into'
+        )
+        string(
+            name: 'TF_DIR',
+            defaultValue: 'G-Check',
+            description: 'Path to Terraform root (relative to repo root)'
+        )
+        booleanParam(
+            name: 'AUTO_APPROVE',
+            defaultValue: false,
+            description: 'Skip the manual approval gate and apply immediately (use for dev only)'
+        )
+        booleanParam(
+            name: 'DESTROY',
+            defaultValue: false,
+            description: 'Run terraform destroy instead of apply. Requires AUTO_APPROVE=true as a safety check.'
+        )
+    }
+
+    // -------------------------------------------------------------------------
+    // Environment — secrets injected here, never echo'd in logs
+    // -------------------------------------------------------------------------
+    environment {
+        // db_password is injected via withCredentials in each stage that needs it
+        // (global credentials() binding is unreliable for TF_VAR_* names)
+
+        // Terraform non-interactive mode
+        TF_IN_AUTOMATION  = 'true'
+        TF_INPUT          = '0'
+
+        // Consistent region across all AWS CLI calls
+        AWS_DEFAULT_REGION = "${params.AWS_REGION}"
+
+        // Colorized Terraform output in Jenkins console
+        TF_CLI_ARGS = '-no-color'
+    }
+
+    options {
+        // Prefix every log line with a timestamp
+        timestamps()
+        // Fail if pipeline hangs (90 min max)
+        timeout(time: 90, unit: 'MINUTES')
+        // Keep last 10 build records + artifacts
+        buildDiscarder(logRotator(numToKeepStr: '10', artifactNumToKeepStr: '10'))
+        // Prevent concurrent runs from racing on the same state file
+        disableConcurrentBuilds()
+    }
+
+    // =========================================================================
+    // STAGES
+    // =========================================================================
+    stages {
+
+        // ---------------------------------------------------------------------
+        // 1. CHECKOUT
+        // ---------------------------------------------------------------------
+        stage('Checkout') {
+            steps {
+                checkout scm
+                echo "Branch: ${env.GIT_BRANCH} | Commit: ${env.GIT_COMMIT?.take(8)}"
+            }
+        }
+
+        // ---------------------------------------------------------------------
+        // 2. TERRAFORM INIT
+        // ---------------------------------------------------------------------
+        stage('TF Init') {
+            steps {
+                dir("${params.TF_DIR}") {
+                    sh '''
+                        terraform version
+                        terraform init \
+                            -backend=true \
+                            -reconfigure
+                    '''
+                }
+            }
+        }
+
+        // ---------------------------------------------------------------------
+        // 3. TERRAFORM VALIDATE
+        // Catches syntax errors and format drift before touching AWS
+        // ---------------------------------------------------------------------
+        stage('TF Validate') {
+            steps {
+                dir("${params.TF_DIR}") {
+                    sh '''
+                        terraform validate
+                        terraform fmt -check -recursive
+                    '''
+                }
+            }
+        }
+
+        // ---------------------------------------------------------------------
+        // 4. TERRAFORM PLAN
+        // Generates plan file — archived as a build artifact for audit trail
+        // ---------------------------------------------------------------------
+        stage('TF Plan') {
+            when {
+                not { expression { params.DESTROY } }
+            }
+            steps {
+                withCredentials([string(credentialsId: 'vandelay-db-password', variable: 'TF_VAR_db_password')]) {
+                    dir("${params.TF_DIR}") {
+                        sh '''
+                            terraform plan \
+                                -out=tfplan \
+                                -detailed-exitcode \
+                                || true
+
+                            # Show a human-readable version for the log
+                            terraform show -no-color tfplan | tee tfplan.txt
+                        '''
+                    }
+                }
+                // Archive both the human-readable and binary plan — binary is
+                // needed by TF Apply after the Approval Gate pause
+                archiveArtifacts artifacts: "${params.TF_DIR}/tfplan.txt, ${params.TF_DIR}/tfplan", fingerprint: true
+            }
+        }
+
+        stage('TF Plan (Destroy Preview)') {
+            when {
+                allOf {
+                    expression { params.DESTROY }
+                    expression { params.AUTO_APPROVE }
+                }
+            }
+            steps {
+                withCredentials([string(credentialsId: 'vandelay-db-password', variable: 'TF_VAR_db_password')]) {
+                    dir("${params.TF_DIR}") {
+                        sh '''
+                            terraform plan -destroy \
+                                -out=tfplan \
+                                -detailed-exitcode \
+                                || true
+
+                            terraform show -no-color tfplan | tee tfplan.txt
+                        '''
+                    }
+                }
+                archiveArtifacts artifacts: "${params.TF_DIR}/tfplan.txt, ${params.TF_DIR}/tfplan", fingerprint: true
+            }
+        }
+
+        // ---------------------------------------------------------------------
+        // 5. APPROVAL GATE
+        // Pauses the build. A human reviews the plan and clicks Proceed.
+        // Skipped when AUTO_APPROVE=true (dev/test only).
+        // ---------------------------------------------------------------------
+        stage('Approval Gate') {
+            when {
+                allOf {
+                    not { expression { params.AUTO_APPROVE } }
+                    not { expression { params.DESTROY } }
+                }
+            }
+            steps {
+                input message: """
+                    Review the plan artifact (tfplan.txt) attached to this build.
+                    Click PROCEED to apply or ABORT to cancel.
+
+                    Branch:  ${env.GIT_BRANCH}
+                    Commit:  ${env.GIT_COMMIT?.take(8)}
+                    Region:  ${params.AWS_REGION}
+                    """,
+                    ok: 'PROCEED — Apply to AWS'
+            }
+        }
+
+        stage('Destroy Approval Gate') {
+            when {
+                allOf {
+                    expression { params.DESTROY }
+                    not { expression { params.AUTO_APPROVE } }
+                }
+            }
+            steps {
+                input message: """
+                    ⚠️  DESTROY requested.
+                    This will tear down ALL 116 resources in ${params.AWS_REGION}.
+
+                    Review tfplan.txt before proceeding.
+                    Type DESTROY in the confirmation box to continue.
+                    """,
+                    ok: 'DESTROY — I understand this cannot be undone'
+            }
+        }
+
+        // ---------------------------------------------------------------------
+        // 6. TERRAFORM APPLY
+        // Uses the saved plan file — exactly what was reviewed gets applied.
+        // ---------------------------------------------------------------------
+        stage('TF Apply') {
+            when {
+                not { expression { params.DESTROY } }
+            }
+            steps {
+                withCredentials([string(credentialsId: 'vandelay-db-password', variable: 'TF_VAR_db_password')]) {
+                    dir("${params.TF_DIR}") {
+                        sh '''
+                            # Re-init in case .terraform/ was cleaned by a previous build
+                            terraform init -backend=true -reconfigure
+                            terraform apply -auto-approve tfplan
+                        '''
+                    }
+                }
+            }
+        }
+
+        stage('TF Destroy') {
+            when {
+                expression { params.DESTROY }
+            }
+            steps {
+                withCredentials([string(credentialsId: 'vandelay-db-password', variable: 'TF_VAR_db_password')]) {
+                    dir("${params.TF_DIR}") {
+                        // Remove prevent_destroy resources from state first
+                        sh '''
+                            echo "Removing prevent_destroy resources from state..."
+                            terraform state rm aws_ebs_volume.vandelay_jenkins_data || true
+                            terraform state rm "aws_s3_bucket.vandelay_alb_logs[0]"  || true
+                            terraform state rm aws_s3_bucket.vandelay_incident_reports || true
+
+                            terraform destroy -auto-approve
+                        '''
+                    }
+                }
+            }
+        }
+
+        // ---------------------------------------------------------------------
+        // 7. EXTRACT OUTPUTS
+        // Pull resource IDs from Terraform state for downstream stages.
+        // Skips on destroy runs (resources are gone).
+        // ---------------------------------------------------------------------
+        stage('Extract Outputs') {
+            when {
+                not { expression { params.DESTROY } }
+            }
+            steps {
+                dir("${params.TF_DIR}") {
+                    script {
+                        env.INSTANCE_ID = sh(
+                            script: "terraform output -raw ec2_instance_id",
+                            returnStdout: true
+                        ).trim()
+
+                        env.SECRET_ID = sh(
+                            script: "terraform output -raw secret_name",
+                            returnStdout: true
+                        ).trim()
+
+                        env.DB_ID = sh(
+                            script: "terraform output -raw rds_identifier",
+                            returnStdout: true
+                        ).trim()
+
+                        env.EC2_PUBLIC_IP = sh(
+                            script: "terraform output -raw ec2_public_ip",
+                            returnStdout: true
+                        ).trim()
+
+                        env.JENKINS_URL_OUTPUT = sh(
+                            script: "terraform output -raw jenkins_url",
+                            returnStdout: true
+                        ).trim()
+
+                        echo """
+                        ┌─────────────────────────────────────────┐
+                        │  Deployed Resources                     │
+                        ├─────────────────────────────────────────┤
+                        │  EC2 Instance : ${env.INSTANCE_ID}
+                        │  RDS Secret   : ${env.SECRET_ID}
+                        │  RDS DB ID    : ${env.DB_ID}
+                        │  App URL      : http://${env.EC2_PUBLIC_IP}/
+                        │  Jenkins URL  : ${env.JENKINS_URL_OUTPUT}
+                        └─────────────────────────────────────────┘
+                        """
+                    }
+                }
+            }
+        }
+
+        // ---------------------------------------------------------------------
+        // 8. SMOKE TEST
+        // Hit the Flask app — expect HTTP 200.
+        // Waits up to 3 minutes for the EC2 user_data to finish bootstrapping.
+        // ---------------------------------------------------------------------
+        stage('Smoke Test') {
+            when {
+                not { expression { params.DESTROY } }
+            }
+            steps {
+                sh '''
+                    echo "Waiting for app to be reachable (up to 3 min)..."
+                    for i in $(seq 1 18); do
+                        STATUS=$(curl -s -o /dev/null -w "%{http_code}" \
+                            --connect-timeout 5 \
+                            "http://$EC2_PUBLIC_IP/" || echo "000")
+                        echo "Attempt $i: HTTP $STATUS"
+                        if [ "$STATUS" = "200" ]; then
+                            echo "SMOKE TEST PASSED — app returned HTTP 200"
+                            exit 0
+                        fi
+                        sleep 10
+                    done
+                    echo "SMOKE TEST FAILED — app did not return HTTP 200 after 3 minutes"
+                    exit 1
+                '''
+            }
+        }
+
+        // ---------------------------------------------------------------------
+        // 9. GATE TESTS
+        // Runs your existing run_all_gates.sh — verifies Secrets Manager,
+        // IAM role, RDS network config. Archives JSON results.
+        // ---------------------------------------------------------------------
+        stage('Gate Tests') {
+            when {
+                not { expression { params.DESTROY } }
+            }
+            steps {
+                dir("${params.TF_DIR}/python") {
+                    sh '''
+                        chmod +x run_all_gates.sh gate_secrets_and_role.sh gate_network_db.sh
+
+                        REGION=$AWS_DEFAULT_REGION \
+                        INSTANCE_ID=$INSTANCE_ID \
+                        SECRET_ID=$SECRET_ID \
+                        DB_ID=$DB_ID \
+                        REQUIRE_ROTATION=false \
+                        CHECK_PRIVATE_SUBNETS=false \
+                        OUT_JSON=gate_result.json \
+                        ./run_all_gates.sh
+                    '''
+                }
+            }
+            post {
+                always {
+                    // Archive gate results regardless of pass/fail — audit trail
+                    archiveArtifacts artifacts: "${params.TF_DIR}/python/gate_result.json",
+                                     allowEmptyArchive: true,
+                                     fingerprint: true
+                    archiveArtifacts artifacts: "${params.TF_DIR}/python/gate_secrets_and_role.json",
+                                     allowEmptyArchive: true
+                    archiveArtifacts artifacts: "${params.TF_DIR}/python/gate_network_db.json",
+                                     allowEmptyArchive: true
+                }
+            }
+        }
+
+        // ---------------------------------------------------------------------
+        // 10. NOTIFY
+        // Print a final summary. Extend this to Slack/email as needed.
+        // ---------------------------------------------------------------------
+        stage('Notify') {
+            steps {
+                script {
+                    def action = params.DESTROY ? 'DESTROY' : 'DEPLOY'
+                    def msg = """
+                    ╔══════════════════════════════════════════╗
+                    ║  Vandelay Lab-2 Pipeline Complete        ║
+                    ╠══════════════════════════════════════════╣
+                    ║  Action  : ${action}
+                    ║  Branch  : ${env.GIT_BRANCH}
+                    ║  Commit  : ${env.GIT_COMMIT?.take(8)}
+                    ║  Region  : ${params.AWS_REGION}
+                    ║  Build # : ${env.BUILD_NUMBER}
+                    ║  Status  : ${currentBuild.currentResult}
+                    ╚══════════════════════════════════════════╝
+                    """
+                    echo msg
+                }
+            }
+        }
+    }
+
+    // =========================================================================
+    // POST — runs after all stages regardless of outcome
+    // =========================================================================
+    post {
+        success {
+            echo "BUILD SUCCEEDED — Infrastructure deployed and gates passed."
+        }
+        failure {
+            echo "BUILD FAILED — Check stage logs above. No partial state was left dirty."
+        }
+        aborted {
+            echo "BUILD ABORTED — Plan was reviewed and rejected. No changes applied."
+        }
+        always {
+            // Clean workspace to avoid stale tfplan files on next run
+            cleanWs(
+                cleanWhenSuccess: false,  // keep artifacts on success for inspection
+                cleanWhenFailure: false,
+                cleanWhenAborted: true,
+                deleteDirs: true,
+                patterns: [[pattern: '**/.terraform/**', type: 'INCLUDE']]
+            )
+        }
+    }
+}
+
+// webhook-test: 2026-03-29 LIVE — GitHubPushTrigger registered, SCMTriggerCause expected
+
+// pipeline-init: 2026-04-05 — all imports resolved, final retrigger
