@@ -78,8 +78,6 @@ pipeline {
     }
 
     options {
-        // Prefix every log line with a timestamp
-        timestamps()
         // Fail if pipeline hangs (90 min max)
         timeout(time: 90, unit: 'MINUTES')
         // Keep last 10 build records + artifacts
