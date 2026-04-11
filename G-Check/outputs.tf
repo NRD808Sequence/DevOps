@@ -209,8 +209,13 @@ output "jenkins_public_ip" {
 }
 
 output "jenkins_url" {
-  description = "URL to access Jenkins UI"
-  value       = "http://${aws_instance.vandelay_jenkins.public_ip}:8080"
+  description = "HTTPS URL to access Jenkins UI via ALB"
+  value       = "https://jenkins.${var.domain_name}"
+}
+
+output "jenkins_alb_dns" {
+  description = "Raw ALB DNS name for Jenkins"
+  value       = aws_lb.vandelay_jenkins_alb.dns_name
 }
 
 output "jenkins_initial_password_cmd" {

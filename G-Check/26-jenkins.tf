@@ -8,14 +8,8 @@ resource "aws_security_group" "vandelay_jenkins_sg" {
   description = "Security group for Jenkins server"
   vpc_id      = aws_vpc.vandelay_vpc01.id
 
-  # Jenkins web UI
-  ingress {
-    from_port   = 8080
-    to_port     = 8080
-    protocol    = "tcp"
-    cidr_blocks = [var.my_ip]
-    description = "Allow Jenkins UI from admin IP"
-  }
+  # Port 8080 ingress is managed by aws_security_group_rule.vandelay_jenkins_from_alb
+  # in 27-jenkins-alb.tf — ALB SG only, no direct internet access.
 
   # SSH removed — use AWS Systems Manager Session Manager (SSM) instead.
   # AmazonSSMManagedInstanceCore is attached to vandelay-jenkins-role.
