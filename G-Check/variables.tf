@@ -91,7 +91,7 @@ variable "db_password" {
 variable "sns_email_endpoint" {
   description = "Email for SNS subscription (PagerDuty simulation). Set via TF_VAR_sns_email_endpoint or terraform.tfvars."
   type        = string
-  default     = "ops-alerts@example.com" # Override in terraform.tfvars with your real email
+  default     = "gaijinmzungu@gmail.com"
 }
 
 variable "my_ip" {
