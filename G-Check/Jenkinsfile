@@ -431,14 +431,9 @@ pipeline {
             echo "BUILD ABORTED — Plan was reviewed and rejected. No changes applied."
         }
         always {
-            // Clean workspace to avoid stale tfplan files on next run
-            cleanWs(
-                cleanWhenSuccess: false,  // keep artifacts on success for inspection
-                cleanWhenFailure: false,
-                cleanWhenAborted: true,
-                deleteDirs: true,
-                patterns: [[pattern: '**/.terraform/**', type: 'INCLUDE']]
-            )
+            // Remove stale .terraform/ dirs to avoid lock file conflicts on next run.
+            // deleteDir() is built-in — no ws-cleanup plugin required.
+            sh 'rm -rf "${WORKSPACE}/${TF_DIR}/.terraform" || true'
         }
     }
 }

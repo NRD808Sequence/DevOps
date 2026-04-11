@@ -95,8 +95,9 @@ variable "sns_email_endpoint" {
 }
 
 variable "my_ip" {
-  description = "Your IP for Jenkins port 8080 access (format: x.x.x.x/32). Set via TF_VAR_my_ip or terraform.tfvars — no default to prevent accidental 0.0.0.0/0."
+  description = "Admin IP CIDR — no longer used for SG rules (Jenkins moved to ALB). Kept to avoid breaking terraform.tfvars."
   type        = string
+  default     = "0.0.0.0/0"
 
   validation {
     condition     = can(regex("^[0-9]{1,3}(\\.[0-9]{1,3}){3}/[0-9]{1,2}$", var.my_ip))
