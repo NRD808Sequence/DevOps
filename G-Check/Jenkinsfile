@@ -141,7 +141,10 @@ pipeline {
                 not { expression { params.DESTROY } }
             }
             steps {
-                withCredentials([string(credentialsId: 'vandelay-db-password', variable: 'TF_VAR_db_password')]) {
+                withCredentials([
+                    string(credentialsId: 'vandelay-db-password',   variable: 'TF_VAR_db_password'),
+                    string(credentialsId: 'sns-email-endpoint',      variable: 'TF_VAR_sns_email_endpoint')
+                ]) {
                     dir("${params.TF_DIR}") {
                         sh '''
                             terraform plan \
@@ -168,7 +171,10 @@ pipeline {
                 }
             }
             steps {
-                withCredentials([string(credentialsId: 'vandelay-db-password', variable: 'TF_VAR_db_password')]) {
+                withCredentials([
+                    string(credentialsId: 'vandelay-db-password',   variable: 'TF_VAR_db_password'),
+                    string(credentialsId: 'sns-email-endpoint',      variable: 'TF_VAR_sns_email_endpoint')
+                ]) {
                     dir("${params.TF_DIR}") {
                         sh '''
                             terraform plan -destroy \
@@ -237,7 +243,10 @@ pipeline {
                 not { expression { params.DESTROY } }
             }
             steps {
-                withCredentials([string(credentialsId: 'vandelay-db-password', variable: 'TF_VAR_db_password')]) {
+                withCredentials([
+                    string(credentialsId: 'vandelay-db-password',   variable: 'TF_VAR_db_password'),
+                    string(credentialsId: 'sns-email-endpoint',      variable: 'TF_VAR_sns_email_endpoint')
+                ]) {
                     dir("${params.TF_DIR}") {
                         sh '''
                             # Re-init in case .terraform/ was cleaned by a previous build
@@ -254,14 +263,17 @@ pipeline {
                 expression { params.DESTROY }
             }
             steps {
-                withCredentials([string(credentialsId: 'vandelay-db-password', variable: 'TF_VAR_db_password')]) {
+                withCredentials([
+                    string(credentialsId: 'vandelay-db-password',   variable: 'TF_VAR_db_password'),
+                    string(credentialsId: 'sns-email-endpoint',      variable: 'TF_VAR_sns_email_endpoint')
+                ]) {
                     dir("${params.TF_DIR}") {
                         // Remove prevent_destroy resources from state first
                         sh '''
                             echo "Removing prevent_destroy resources from state..."
                             terraform state rm aws_ebs_volume.vandelay_jenkins_data || true
                             terraform state rm "aws_s3_bucket.vandelay_alb_logs[0]"  || true
-                            terraform state rm aws_s3_bucket.vandelay_incident_reports || true
+                            terraform state rm aws_s3_bucket.incident_reports || true
 
                             terraform destroy -auto-approve
                         '''
