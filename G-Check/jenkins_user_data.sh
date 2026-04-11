@@ -82,47 +82,88 @@ echo "$JENKINS_VERSION" > /var/lib/jenkins/jenkins.install.InstallUtil.lastExecV
 echo "$JENKINS_VERSION" > /var/lib/jenkins/jenkins.install.UpgradeWizard.state
 
 ########################################
-# 4. Pre-install plugins via jenkins-plugin-cli
-# Core set for this pipeline — runs before Jenkins starts so plugins
-# are present on first boot (no "restart to activate" loop).
+# 4. Pre-install plugins via Plugin Installation Manager JAR
+# jenkins-plugin-cli binary is NOT available on AL2023 + Jenkins LTS.
+# We download the JAR directly and run it with java — this always works.
 ########################################
 
 PLUGIN_DIR=/var/lib/jenkins/plugins
 mkdir -p "$PLUGIN_DIR"
 
+# Download Plugin Installation Manager Tool JAR
+PIM_JAR=/usr/local/lib/jenkins-plugin-manager.jar
+if [ ! -f "$PIM_JAR" ]; then
+  echo "=== Downloading Plugin Installation Manager JAR ==="
+  curl -sL -o "$PIM_JAR" \
+    "https://github.com/jenkinsci/plugin-installation-manager-tool/releases/download/2.12.15/jenkins-plugin-manager-2.12.15.jar"
+fi
+
+# Top-level plugins — transitive deps are resolved automatically.
+# This is the full set currently installed on the running Jenkins instance.
 PLUGINS=(
-  # Pipeline core
-  "workflow-aggregator"
-  "pipeline-stage-view"
-  "pipeline-graph-analysis"
-  # SCM
-  "git"
-  "github"
-  "github-branch-source"
+  # Pipeline suite
+  workflow-aggregator
+  pipeline-stage-view
+  pipeline-graph-analysis
+  pipeline-aws
+  # SCM + GitHub
+  git
+  github
+  github-branch-source
+  github-oauth
+  github-pullrequest
+  github-checks
+  git-push
+  git-tag-message
   # Credentials
-  "credentials"
-  "credentials-binding"
-  "plain-credentials"
-  "aws-credentials"
-  # Build options used in Jenkinsfile
-  "timestamper"
-  "ansicolor"
-  "ws-cleanup"
-  "build-timeout"
-  # Snyk DevSecOps (next session)
-  "snyk-security-scanner"
-  # Misc
-  "matrix-auth"
-  "authorize-project"
+  credentials-binding
+  plain-credentials
+  aws-credentials
+  aws-secrets-manager-secret-source
+  # AWS integrations
+  ec2
+  aws-java-sdk
+  configuration-as-code
+  configuration-as-code-secret-ssm
+  # Blue Ocean
+  blueocean-web
+  blueocean-rest
+  blueocean-pipeline-api-impl
+  blueocean-pipeline-scm-api
+  blueocean-github-pipeline
+  # DevSecOps
+  snyk-security-scanner
+  sonar
+  # Infrastructure-as-Code
+  terraform
+  # Kubernetes (future use)
+  kubernetes
+  kubernetes-credentials
+  kubernetes-cli
+  # Build utilities
+  timestamper
+  ansicolor
+  ws-cleanup
+  build-timeout
+  copyartifact
+  htmlpublisher
+  # Auth + security
+  matrix-auth
+  authorize-project
+  # Misc / UI
+  dark-theme
+  mailer
+  junit
+  git-forensics
 )
 
-echo "=== Installing plugins ==="
-/usr/bin/jenkins-plugin-cli \
+echo "=== Installing plugins via Plugin Installation Manager JAR ==="
+java -jar "$PIM_JAR" \
   --war /usr/share/java/jenkins.war \
   --plugin-download-directory "$PLUGIN_DIR" \
   --plugins "${PLUGINS[*]}" \
-  && echo "Plugin install complete" \
-  || echo "WARNING: jenkins-plugin-cli encountered errors — plugins may need manual install"
+  && echo "=== Plugin install complete ===" \
+  || echo "WARNING: plugin-manager encountered errors — check /var/log/jenkins-setup.log"
 
 ########################################
 # 5. Create init.groovy.d scripts
@@ -131,7 +172,64 @@ echo "=== Installing plugins ==="
 
 mkdir -p /var/lib/jenkins/init.groovy.d
 
-# --- 5a. Credentials --------------------------------------------------------
+# --- 5a. Plugin safety-net --------------------------------------------------
+# Runs after Jenkins starts. Installs any plugins still missing (e.g. if the
+# pre-install JAR step partially failed) and restarts Jenkins once if needed.
+
+cat > /var/lib/jenkins/init.groovy.d/00-install-plugins.groovy << 'GROOVY'
+import jenkins.model.Jenkins
+import hudson.PluginManager
+import hudson.util.VersionNumber
+
+def required = [
+  'workflow-aggregator', 'pipeline-stage-view', 'pipeline-graph-analysis', 'pipeline-aws',
+  'git', 'github', 'github-branch-source', 'github-oauth', 'github-pullrequest',
+  'github-checks', 'git-push', 'git-tag-message',
+  'credentials-binding', 'plain-credentials', 'aws-credentials',
+  'aws-secrets-manager-secret-source', 'ec2', 'aws-java-sdk',
+  'configuration-as-code', 'configuration-as-code-secret-ssm',
+  'blueocean-web', 'blueocean-rest', 'blueocean-pipeline-api-impl',
+  'blueocean-pipeline-scm-api', 'blueocean-github-pipeline',
+  'snyk-security-scanner', 'sonar', 'terraform', 'kubernetes',
+  'kubernetes-credentials', 'kubernetes-cli',
+  'copyartifact', 'htmlpublisher', 'matrix-auth', 'authorize-project',
+  'dark-theme', 'mailer', 'junit', 'git-forensics'
+]
+
+def pm = Jenkins.get().pluginManager
+def uc = Jenkins.get().updateCenter
+
+uc.updateAllSites()
+
+def missing = required.findAll { name ->
+  pm.getPlugin(name) == null
+}
+
+if (missing.isEmpty()) {
+  println "=== All required plugins already installed ==="
+  return
+}
+
+println "=== Installing missing plugins: ${missing.join(', ')} ==="
+def installed = false
+missing.each { name ->
+  def plugin = uc.getPlugin(name)
+  if (plugin) {
+    plugin.deploy(true).get()   // deploy + block until done
+    installed = true
+    println "  Installed: ${name}"
+  } else {
+    println "  WARNING: plugin not found in update center: ${name}"
+  }
+}
+
+if (installed) {
+  println "=== Plugin install complete — scheduling restart ==="
+  Jenkins.get().safeRestart()
+}
+GROOVY
+
+# --- 5b. Credentials --------------------------------------------------------
 # Pulls vandelay-db-password from Secrets Manager at boot time.
 # Snyk stubs have placeholder values — fill them in Jenkins UI before Snyk session.
 
