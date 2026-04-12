@@ -23,3 +23,10 @@ tfplan.txt
 **/lambda/*.zip
 **/python/gate_*.json
 **/*.jar
+
+# Deliverables — raw pipeline console logs and gate JSONs contain AWS account IDs in ARNs
+**/build*_console.txt
+**/_deliverables/**/build*_gate_*.json
+**/_deliverables/**/local_gate_*.json
+**/_deliverables/**/gate_result_*.json
+**/_deliverables/**/*_aws_cli_evidence.txt
