@@ -404,9 +404,34 @@ pipeline {
         }
 
         // ---------------------------------------------------------------------
-        // 10. ROVER GRAPH
+        // 10. ROVER IMAGE
+        // Builds rover-tf-1.5.7 Docker image from Dockerfile.rover if it does
+        // not already exist on the Jenkins host. Idempotent — skipped when the
+        // image is present, so subsequent builds add ~0s overhead.
+        // ---------------------------------------------------------------------
+        stage('Rover Image') {
+            when {
+                not { expression { params.DESTROY } }
+            }
+            steps {
+                dir("${params.TF_DIR}") {
+                    sh '''
+                        if docker image inspect rover-tf-1.5.7:latest > /dev/null 2>&1; then
+                            echo "rover-tf-1.5.7:latest already exists — skipping build"
+                        else
+                            echo "Building rover-tf-1.5.7:latest from Dockerfile.rover..."
+                            docker build -t rover-tf-1.5.7:latest -f Dockerfile.rover .
+                            echo "rover-tf-1.5.7:latest build complete"
+                        fi
+                    '''
+                }
+            }
+        }
+
+        // ---------------------------------------------------------------------
+        // 11. ROVER GRAPH
         // Generates a visual SVG map of all Terraform resources using Rover.
-        // Uses the rover-tf-1.5.7 Docker image (pre-built on Jenkins host).
+        // Uses the rover-tf-1.5.7 Docker image built in the previous stage.
         // Output: G-Check/rover.svg — archived as a build artifact.
         // Skipped on destroy runs (no infrastructure to graph).
         // ---------------------------------------------------------------------
@@ -438,7 +463,7 @@ pipeline {
         }
 
         // ---------------------------------------------------------------------
-        // 11. NOTIFY
+        // 12. NOTIFY
         // Print a final summary. Extend this to Slack/email as needed.
         // ---------------------------------------------------------------------
         stage('Notify') {

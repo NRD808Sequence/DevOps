@@ -1,0 +1,9 @@
+FROM im2nguyen/rover:latest
+
+# Install Terraform 1.5.7 (matches pipeline TF version)
+RUN apk add --no-cache wget unzip \
+    && wget https://releases.hashicorp.com/terraform/1.5.7/terraform_1.5.7_linux_amd64.zip \
+    && unzip terraform_1.5.7_linux_amd64.zip \
+    && mv terraform /usr/local/bin/terraform \
+    && chmod +x /usr/local/bin/terraform \
+    && rm terraform_1.5.7_linux_amd64.zip
