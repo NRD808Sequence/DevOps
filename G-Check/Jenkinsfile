@@ -404,7 +404,41 @@ pipeline {
         }
 
         // ---------------------------------------------------------------------
-        // 10. NOTIFY
+        // 10. ROVER GRAPH
+        // Generates a visual SVG map of all Terraform resources using Rover.
+        // Uses the rover-tf-1.5.7 Docker image (pre-built on Jenkins host).
+        // Output: G-Check/rover.svg — archived as a build artifact.
+        // Skipped on destroy runs (no infrastructure to graph).
+        // ---------------------------------------------------------------------
+        stage('Rover Graph') {
+            when {
+                not { expression { params.DESTROY } }
+            }
+            steps {
+                withCredentials([
+                    string(credentialsId: 'vandelay-db-password', variable: 'TF_VAR_db_password')
+                ]) {
+                    sh '''
+                        docker run --rm \
+                          -v "${WORKSPACE}/${TF_DIR}:/src" \
+                          -v "$HOME/.aws:/root/.aws:ro" \
+                          -e TF_VAR_db_password="$TF_VAR_db_password" \
+                          rover-tf-1.5.7:latest \
+                          rover -workingDir /src -genImage
+                    '''
+                }
+            }
+            post {
+                always {
+                    archiveArtifacts artifacts: "${params.TF_DIR}/rover.svg",
+                                     allowEmptyArchive: true,
+                                     fingerprint: true
+                }
+            }
+        }
+
+        // ---------------------------------------------------------------------
+        // 11. NOTIFY
         // Print a final summary. Extend this to Slack/email as needed.
         // ---------------------------------------------------------------------
         stage('Notify') {
