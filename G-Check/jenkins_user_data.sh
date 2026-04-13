@@ -50,7 +50,7 @@ if [ -n "${DEVICE:-}" ]; then
 fi
 
 ########################################
-# 2. Install Jenkins, Java 21, Terraform, Git
+# 2. Install Jenkins, Java 21, Terraform, Git, Docker
 ########################################
 
 dnf update -y
@@ -67,6 +67,22 @@ dnf install -y jenkins git
 dnf install -y dnf-plugins-core
 dnf config-manager --add-repo https://rpm.releases.hashicorp.com/AmazonLinux/hashicorp.repo
 dnf install -y terraform
+
+# Docker — required for Rover Graph pipeline stage
+# AL2023 ships docker via the standard repo
+dnf install -y docker
+systemctl enable docker
+systemctl start docker
+# Allow jenkins user to run docker without sudo
+usermod -aG docker jenkins
+echo "=== Docker installed: $(docker --version) ==="
+
+# Python 3 + pip — AL2023 built-in, confirm and install boto3 for gate scripts
+# python3 and aws-cli ship with AL2023 — explicit install is a no-op if present
+dnf install -y python3 python3-pip
+pip3 install --quiet boto3 botocore
+echo "=== Python: $(python3 --version) ==="
+echo "=== AWS CLI: $(aws --version) ==="
 
 echo "=== Package installation complete ==="
 
@@ -352,6 +368,23 @@ timeout 300 bash -c '
 INIT_PASS=$(cat /var/lib/jenkins/secrets/initialAdminPassword 2>/dev/null || echo "Password file not found — may have used existing EBS data")
 echo "=== Initial admin password: ${INIT_PASS} ==="
 echo "=== Jenkins bootstrap complete $(date) ==="
+
+########################################
+# 7. Binary verification — confirm all required tools are present
+########################################
+
+echo ""
+echo "=== Binary Verification ==="
+echo "---"
+java        -version 2>&1 | head -1
+jenkins     --version 2>/dev/null       || echo "Jenkins: service-based (check systemctl status jenkins)"
+terraform   version   | head -1
+docker      --version
+python3     --version
+aws         --version
+git         --version
+echo "---"
+echo "=== All binaries confirmed ==="
 echo ""
 echo "=== Next steps ==="
 echo "  1. Login: http://<public-ip>:8080  user: admin  pass: see above"
