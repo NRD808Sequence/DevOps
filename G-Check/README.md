@@ -1,5 +1,7 @@
 # g-check — Class 7 Gut Check
 
+[![vandelay-lab2-pipeline](https://jenkins.keepuneat.click/buildStatus/icon?job=vandelay-lab2-pipeline)](https://jenkins.keepuneat.click/job/vandelay-lab2-pipeline/)
+
 Jenkins CI/CD pipeline deploying Vandelay Industries infrastructure on AWS via Terraform.
 
 ## What This Is
