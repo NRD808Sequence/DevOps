@@ -135,6 +135,14 @@ resource "aws_instance" "vandelay_jenkins" {
 
   user_data = file("${path.module}/jenkins_user_data.sh")
 
+  # Prevent Terraform from replacing the running Jenkins instance when
+  # user_data or AMI changes. Jenkins bootstraps once on first launch —
+  # replacing it mid-pipeline would kill the running build.
+  # Apply user_data changes manually via SSM, or destroy+recreate deliberately.
+  lifecycle {
+    ignore_changes = [user_data, ami]
+  }
+
   tags = merge(local.common_tags, {
     Name = "${local.name_prefix}-jenkins"
   })
