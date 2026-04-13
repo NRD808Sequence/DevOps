@@ -140,7 +140,7 @@ resource "aws_instance" "vandelay_jenkins" {
   # replacing it mid-pipeline would kill the running build.
   # Apply user_data changes manually via SSM, or destroy+recreate deliberately.
   lifecycle {
-    ignore_changes = [user_data, ami]
+    ignore_changes = [user_data, ami, public_ip, public_dns]
   }
 
   tags = merge(local.common_tags, {
