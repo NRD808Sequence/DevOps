@@ -5,13 +5,16 @@
 //   1. Checkout        — pull Terraform code from Git
 //   2. TF Init         — initialize backend (S3) + providers
 //   3. TF Validate     — syntax + format check
-//   4. TF Plan         — generate execution plan, archive as artifact
-//   5. Approval Gate   — human must approve before any changes hit AWS
-//   6. TF Apply        — deploy infrastructure
-//   7. Extract Outputs — pull INSTANCE_ID, SECRET_ID, DB_ID from state
-//   8. Smoke Test      — hit the app URL, expect HTTP 200
-//   9. Gate Tests      — run run_all_gates.sh, archive JSON results
-//  10. Notify          — print final status badge
+//   4. Pike Scan       — minimum IAM policy required for this TF code (non-blocking)
+//   5. TF Plan         — generate execution plan, archive as artifact
+//   6. Approval Gate   — human must approve before any changes hit AWS
+//   7. TF Apply        — deploy infrastructure
+//   8. Extract Outputs — pull INSTANCE_ID, SECRET_ID, DB_ID from state
+//   9. Smoke Test      — hit the app URL, expect HTTP 200
+//  10. Gate Tests      — run run_all_gates.sh, archive JSON results
+//  11. Rover Image     — build rover Docker image if not already present
+//  12. Rover Graph     — generate SVG resource map
+//  13. Notify          — print final status badge
 //
 // Prerequisites (configure in Jenkins before running):
 //   Credentials:
@@ -161,7 +164,30 @@ pipeline {
         }
 
         // ---------------------------------------------------------------------
-        // 4. TERRAFORM PLAN
+        // 4. PIKE SCAN
+        // Runs pike against G-Check/ to output the minimum IAM policy required.
+        // Non-blocking (|| true) — a Pike failure never kills the pipeline.
+        // Output archived as pike-policy.json alongside tfplan and gate JSONs.
+        // ---------------------------------------------------------------------
+        stage('Pike Scan') {
+            when {
+                expression { env.GCHECK_CHANGED == 'true' }
+            }
+            steps {
+                sh '''
+                    docker run --rm \
+                        --volume "${WORKSPACE}/${TF_DIR}:/tf" \
+                        jameswoolfenden/pike scan -d /tf -o json \
+                        > pike-policy.json 2>&1 || true
+                    echo "=== Pike Minimum IAM Policy ==="
+                    cat pike-policy.json
+                '''
+                archiveArtifacts artifacts: 'pike-policy.json', allowEmptyArchive: true
+            }
+        }
+
+        // ---------------------------------------------------------------------
+        // 5. TERRAFORM PLAN
         // Generates plan file — archived as a build artifact for audit trail
         // ---------------------------------------------------------------------
         stage('TF Plan') {
