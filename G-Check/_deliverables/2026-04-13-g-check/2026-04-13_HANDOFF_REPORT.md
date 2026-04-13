@@ -1,7 +1,7 @@
 # Lab-2 G-Check — Team Handoff Report
 **Date:** 2026-04-13  
 **Prepared by:** NRD808Sequence  
-**Build:** #21 — all 12 stages SUCCESS  
+**Build:** #29 — all 13 stages SUCCESS  
 **Status:** STABLE — pipeline is green, EC2 self-termination bug resolved  
 
 ---
@@ -145,11 +145,38 @@ Requires anonymous `Job/Read` permission set in Jenkins → Configure Global Sec
 
 ---
 
+## Pike Scan — Build #29
+
+**Tool:** `jameswoolfenden/pike` (Docker Hub)
+**Stage:** 4 — runs after TF Validate, before TF Plan
+**Artifact:** `pike-policy.json` — archived on every build
+**Purpose:** Enumerates the minimum IAM permissions required to deploy this Terraform stack
+
+```
+26 statement blocks · 16 AWS services
+ec2 · iam · rds · s3 · cloudfront · wafv2 · route53
+alb · lambda · secretsmanager · sns · ssm · cloudwatch
+logs · acm · serverlessrepo
+```
+
+Full output: `G-Check/_deliverables/2026-04-13-g-check/G-Check/pike-policy.json`
+
+---
+
+## Evolution Summary
+
+| Date | Build | Stages | Rover | Pike | HTTPS | EBS | Swap | lifecycle fix |
+|---|---|---|---|---|---|---|---|---|
+| 2026-04-05 | #17/#18 | 10 | No | No | No | No | No | No |
+| 2026-04-11 | #12 | 13 | No | No | Yes | Yes | No | No |
+| 2026-04-13 | #29 | 13 | Yes | Yes | Yes | Yes | Yes | Yes |
+
+---
+
 ## Pending Items
 
 | Item | Priority | Notes |
 |---|---|---|
-| jenkins-s3-test pipeline | Medium | Create `Jenkinsfile` in `NRD808Sequence/jenkins-s3-test`, fill JFrog URL/user, create separate Jenkins job |
 | "Selected Git installation does not exist" warning | Low | Cosmetic — fix in Manage Jenkins → Tools → Git |
 | SNS email confirmation | Low | Confirm subscription at gaijinmzungu@gmail.com for SNS notify stage |
 
