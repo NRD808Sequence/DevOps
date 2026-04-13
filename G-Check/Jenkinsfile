@@ -93,11 +93,33 @@ pipeline {
 
         // ---------------------------------------------------------------------
         // 1. CHECKOUT
+        // Sets GCHECK_CHANGED=true when G-Check/ files are in this push,
+        // or when DESTROY=true (manual trigger — always runs regardless).
+        // All TF stages gate on this flag so doc-only pushes skip Terraform.
         // ---------------------------------------------------------------------
         stage('Checkout') {
             steps {
                 checkout scm
                 echo "Branch: ${env.GIT_BRANCH} | Commit: ${env.GIT_COMMIT?.take(8)}"
+                script {
+                    if (params.DESTROY == true) {
+                        env.GCHECK_CHANGED = 'true'
+                        echo 'DESTROY mode — path filter bypassed'
+                    } else {
+                        def prev = env.GIT_PREVIOUS_SUCCESSFUL_COMMIT ?: ''
+                        if (prev == '') {
+                            env.GCHECK_CHANGED = 'true'
+                            echo 'No previous successful build — running full pipeline'
+                        } else {
+                            def count = sh(
+                                script: "git diff --name-only ${prev} HEAD | grep -c '^G-Check/' || echo 0",
+                                returnStdout: true
+                            ).trim()
+                            env.GCHECK_CHANGED = (count != '0').toString()
+                            echo "G-Check/ files changed: ${count} — GCHECK_CHANGED=${env.GCHECK_CHANGED}"
+                        }
+                    }
+                }
             }
         }
 
@@ -105,6 +127,9 @@ pipeline {
         // 2. TERRAFORM INIT
         // ---------------------------------------------------------------------
         stage('TF Init') {
+            when {
+                expression { env.GCHECK_CHANGED == 'true' }
+            }
             steps {
                 dir("${params.TF_DIR}") {
                     sh '''
@@ -122,6 +147,9 @@ pipeline {
         // Catches syntax errors and format drift before touching AWS
         // ---------------------------------------------------------------------
         stage('TF Validate') {
+            when {
+                expression { env.GCHECK_CHANGED == 'true' }
+            }
             steps {
                 dir("${params.TF_DIR}") {
                     sh '''
@@ -138,7 +166,10 @@ pipeline {
         // ---------------------------------------------------------------------
         stage('TF Plan') {
             when {
-                not { expression { params.DESTROY } }
+                allOf {
+                    expression { env.GCHECK_CHANGED == 'true' }
+                    not { expression { params.DESTROY } }
+                }
             }
             steps {
                 withCredentials([
@@ -166,6 +197,7 @@ pipeline {
         stage('TF Plan (Destroy Preview)') {
             when {
                 allOf {
+                    expression { env.GCHECK_CHANGED == 'true' }
                     expression { params.DESTROY }
                     expression { params.AUTO_APPROVE }
                 }
@@ -198,6 +230,7 @@ pipeline {
         stage('Approval Gate') {
             when {
                 allOf {
+                    expression { env.GCHECK_CHANGED == 'true' }
                     not { expression { params.AUTO_APPROVE } }
                     not { expression { params.DESTROY } }
                 }
@@ -218,6 +251,7 @@ pipeline {
         stage('Destroy Approval Gate') {
             when {
                 allOf {
+                    expression { env.GCHECK_CHANGED == 'true' }
                     expression { params.DESTROY }
                     not { expression { params.AUTO_APPROVE } }
                 }
@@ -240,7 +274,10 @@ pipeline {
         // ---------------------------------------------------------------------
         stage('TF Apply') {
             when {
-                not { expression { params.DESTROY } }
+                allOf {
+                    expression { env.GCHECK_CHANGED == 'true' }
+                    not { expression { params.DESTROY } }
+                }
             }
             steps {
                 withCredentials([
@@ -260,7 +297,10 @@ pipeline {
 
         stage('TF Destroy') {
             when {
-                expression { params.DESTROY }
+                allOf {
+                    expression { env.GCHECK_CHANGED == 'true' }
+                    expression { params.DESTROY }
+                }
             }
             steps {
                 withCredentials([
@@ -289,7 +329,10 @@ pipeline {
         // ---------------------------------------------------------------------
         stage('Extract Outputs') {
             when {
-                not { expression { params.DESTROY } }
+                allOf {
+                    expression { env.GCHECK_CHANGED == 'true' }
+                    not { expression { params.DESTROY } }
+                }
             }
             steps {
                 dir("${params.TF_DIR}") {
@@ -342,7 +385,10 @@ pipeline {
         // ---------------------------------------------------------------------
         stage('Smoke Test') {
             when {
-                not { expression { params.DESTROY } }
+                allOf {
+                    expression { env.GCHECK_CHANGED == 'true' }
+                    not { expression { params.DESTROY } }
+                }
             }
             steps {
                 sh '''
@@ -371,7 +417,10 @@ pipeline {
         // ---------------------------------------------------------------------
         stage('Gate Tests') {
             when {
-                not { expression { params.DESTROY } }
+                allOf {
+                    expression { env.GCHECK_CHANGED == 'true' }
+                    not { expression { params.DESTROY } }
+                }
             }
             steps {
                 dir("${params.TF_DIR}/python") {
@@ -411,7 +460,10 @@ pipeline {
         // ---------------------------------------------------------------------
         stage('Rover Image') {
             when {
-                not { expression { params.DESTROY } }
+                allOf {
+                    expression { env.GCHECK_CHANGED == 'true' }
+                    not { expression { params.DESTROY } }
+                }
             }
             steps {
                 dir("${params.TF_DIR}") {
@@ -437,7 +489,10 @@ pipeline {
         // ---------------------------------------------------------------------
         stage('Rover Graph') {
             when {
-                not { expression { params.DESTROY } }
+                allOf {
+                    expression { env.GCHECK_CHANGED == 'true' }
+                    not { expression { params.DESTROY } }
+                }
             }
             steps {
                 withCredentials([
@@ -472,6 +527,9 @@ pipeline {
         // Print a final summary. Extend this to Slack/email as needed.
         // ---------------------------------------------------------------------
         stage('Notify') {
+            when {
+                expression { env.GCHECK_CHANGED == 'true' }
+            }
             steps {
                 script {
                     def action = params.DESTROY ? 'DESTROY' : 'DEPLOY'
