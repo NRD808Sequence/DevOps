@@ -3,8 +3,9 @@
 # Jenkins Bootstrap — Amazon Linux 2023
 #
 # What this does (fully automated — no manual wizard clicks needed):
+#   0. Enable 2 GB swap (prevents OOM on t3.medium during heavy bootstrap)
 #   1. Mount persistent EBS volume (survives EC2 replacement)
-#   2. Install Java 21, Jenkins LTS, Terraform, Git
+#   2. Install Java 21, Jenkins LTS, Terraform, Git, Docker
 #   3. Skip Jenkins setup wizard
 #   4. Pre-install pipeline plugins via jenkins-plugin-cli
 #   5. Drop init.groovy.d scripts to create credentials + pipeline job
@@ -20,6 +21,20 @@ set -euo pipefail
 LOG=/var/log/jenkins-setup.log
 exec > >(tee -a "$LOG") 2>&1
 echo "=== Jenkins bootstrap started $(date) ==="
+
+########################################
+# 0. Swap — 2 GB swap file to prevent OOM during heavy bootstrap
+# AL2023 t3.medium ships with 0 swap; plugin install + Docker exhaust 4 GB RAM.
+########################################
+
+if [ ! -f /swapfile ]; then
+  fallocate -l 2G /swapfile
+  chmod 600 /swapfile
+  mkswap /swapfile
+  swapon /swapfile
+  echo '/swapfile none swap sw 0 0' >> /etc/fstab
+  echo "=== Swap enabled: $(free -h | grep Swap) ==="
+fi
 
 ########################################
 # 1. Mount persistent EBS volume
