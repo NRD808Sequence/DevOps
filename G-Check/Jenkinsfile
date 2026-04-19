@@ -81,6 +81,7 @@ pipeline {
     }
 
     options {
+        timestamps()
         // Fail if pipeline hangs (90 min max)
         timeout(time: 90, unit: 'MINUTES')
         // Keep last 10 build records + artifacts
@@ -96,33 +97,11 @@ pipeline {
 
         // ---------------------------------------------------------------------
         // 1. CHECKOUT
-        // Sets GCHECK_CHANGED=true when G-Check/ files are in this push,
-        // or when DESTROY=true (manual trigger — always runs regardless).
-        // All TF stages gate on this flag so doc-only pushes skip Terraform.
         // ---------------------------------------------------------------------
         stage('Checkout') {
             steps {
                 checkout scm
                 echo "Branch: ${env.GIT_BRANCH} | Commit: ${env.GIT_COMMIT?.take(8)}"
-                script {
-                    if (params.DESTROY == true) {
-                        env.GCHECK_CHANGED = 'true'
-                        echo 'DESTROY mode — path filter bypassed'
-                    } else {
-                        def prev = env.GIT_PREVIOUS_SUCCESSFUL_COMMIT ?: ''
-                        if (prev == '') {
-                            env.GCHECK_CHANGED = 'true'
-                            echo 'No previous successful build — running full pipeline'
-                        } else {
-                            def count = sh(
-                                script: "git diff --name-only ${prev} HEAD | grep -c '^G-Check/' || echo 0",
-                                returnStdout: true
-                            ).trim()
-                            env.GCHECK_CHANGED = (count != '0').toString()
-                            echo "G-Check/ files changed: ${count} — GCHECK_CHANGED=${env.GCHECK_CHANGED}"
-                        }
-                    }
-                }
             }
         }
 
@@ -130,9 +109,6 @@ pipeline {
         // 2. TERRAFORM INIT
         // ---------------------------------------------------------------------
         stage('TF Init') {
-            when {
-                expression { env.GCHECK_CHANGED == 'true' }
-            }
             steps {
                 dir("${params.TF_DIR}") {
                     sh '''
@@ -150,9 +126,6 @@ pipeline {
         // Catches syntax errors and format drift before touching AWS
         // ---------------------------------------------------------------------
         stage('TF Validate') {
-            when {
-                expression { env.GCHECK_CHANGED == 'true' }
-            }
             steps {
                 dir("${params.TF_DIR}") {
                     sh '''
@@ -170,9 +143,6 @@ pipeline {
         // Output archived as pike-policy.json alongside tfplan and gate JSONs.
         // ---------------------------------------------------------------------
         stage('Pike Scan') {
-            when {
-                expression { env.GCHECK_CHANGED == 'true' }
-            }
             steps {
                 sh '''
                     docker run --rm \
@@ -192,15 +162,11 @@ pipeline {
         // ---------------------------------------------------------------------
         stage('TF Plan') {
             when {
-                allOf {
-                    expression { env.GCHECK_CHANGED == 'true' }
-                    not { expression { params.DESTROY } }
-                }
+                not { expression { params.DESTROY } }
             }
             steps {
                 withCredentials([
-                    string(credentialsId: 'vandelay-db-password',   variable: 'TF_VAR_db_password'),
-                    string(credentialsId: 'sns-email-endpoint',      variable: 'TF_VAR_sns_email_endpoint')
+                    string(credentialsId: 'vandelay-db-password', variable: 'TF_VAR_db_password')
                 ]) {
                     dir("${params.TF_DIR}") {
                         sh '''
@@ -223,15 +189,13 @@ pipeline {
         stage('TF Plan (Destroy Preview)') {
             when {
                 allOf {
-                    expression { env.GCHECK_CHANGED == 'true' }
                     expression { params.DESTROY }
                     expression { params.AUTO_APPROVE }
                 }
             }
             steps {
                 withCredentials([
-                    string(credentialsId: 'vandelay-db-password',   variable: 'TF_VAR_db_password'),
-                    string(credentialsId: 'sns-email-endpoint',      variable: 'TF_VAR_sns_email_endpoint')
+                    string(credentialsId: 'vandelay-db-password', variable: 'TF_VAR_db_password')
                 ]) {
                     dir("${params.TF_DIR}") {
                         sh '''
@@ -249,14 +213,13 @@ pipeline {
         }
 
         // ---------------------------------------------------------------------
-        // 5. APPROVAL GATE
+        // 6. APPROVAL GATE
         // Pauses the build. A human reviews the plan and clicks Proceed.
         // Skipped when AUTO_APPROVE=true (dev/test only).
         // ---------------------------------------------------------------------
         stage('Approval Gate') {
             when {
                 allOf {
-                    expression { env.GCHECK_CHANGED == 'true' }
                     not { expression { params.AUTO_APPROVE } }
                     not { expression { params.DESTROY } }
                 }
@@ -277,7 +240,6 @@ pipeline {
         stage('Destroy Approval Gate') {
             when {
                 allOf {
-                    expression { env.GCHECK_CHANGED == 'true' }
                     expression { params.DESTROY }
                     not { expression { params.AUTO_APPROVE } }
                 }
@@ -285,7 +247,7 @@ pipeline {
             steps {
                 input message: """
                     ⚠️  DESTROY requested.
-                    This will tear down ALL 116 resources in ${params.AWS_REGION}.
+                    This will tear down ALL resources in ${params.AWS_REGION}.
 
                     Review tfplan.txt before proceeding.
                     Type DESTROY in the confirmation box to continue.
@@ -295,20 +257,16 @@ pipeline {
         }
 
         // ---------------------------------------------------------------------
-        // 6. TERRAFORM APPLY
+        // 7. TERRAFORM APPLY
         // Uses the saved plan file — exactly what was reviewed gets applied.
         // ---------------------------------------------------------------------
         stage('TF Apply') {
             when {
-                allOf {
-                    expression { env.GCHECK_CHANGED == 'true' }
-                    not { expression { params.DESTROY } }
-                }
+                not { expression { params.DESTROY } }
             }
             steps {
                 withCredentials([
-                    string(credentialsId: 'vandelay-db-password',   variable: 'TF_VAR_db_password'),
-                    string(credentialsId: 'sns-email-endpoint',      variable: 'TF_VAR_sns_email_endpoint')
+                    string(credentialsId: 'vandelay-db-password', variable: 'TF_VAR_db_password')
                 ]) {
                     dir("${params.TF_DIR}") {
                         sh '''
@@ -323,15 +281,11 @@ pipeline {
 
         stage('TF Destroy') {
             when {
-                allOf {
-                    expression { env.GCHECK_CHANGED == 'true' }
-                    expression { params.DESTROY }
-                }
+                expression { params.DESTROY }
             }
             steps {
                 withCredentials([
-                    string(credentialsId: 'vandelay-db-password',   variable: 'TF_VAR_db_password'),
-                    string(credentialsId: 'sns-email-endpoint',      variable: 'TF_VAR_sns_email_endpoint')
+                    string(credentialsId: 'vandelay-db-password', variable: 'TF_VAR_db_password')
                 ]) {
                     dir("${params.TF_DIR}") {
                         // Remove prevent_destroy resources from state first
@@ -349,16 +303,13 @@ pipeline {
         }
 
         // ---------------------------------------------------------------------
-        // 7. EXTRACT OUTPUTS
+        // 8. EXTRACT OUTPUTS
         // Pull resource IDs from Terraform state for downstream stages.
         // Skips on destroy runs (resources are gone).
         // ---------------------------------------------------------------------
         stage('Extract Outputs') {
             when {
-                allOf {
-                    expression { env.GCHECK_CHANGED == 'true' }
-                    not { expression { params.DESTROY } }
-                }
+                not { expression { params.DESTROY } }
             }
             steps {
                 dir("${params.TF_DIR}") {
@@ -405,16 +356,13 @@ pipeline {
         }
 
         // ---------------------------------------------------------------------
-        // 8. SMOKE TEST
+        // 9. SMOKE TEST
         // Hit the Flask app — expect HTTP 200.
         // Waits up to 3 minutes for the EC2 user_data to finish bootstrapping.
         // ---------------------------------------------------------------------
         stage('Smoke Test') {
             when {
-                allOf {
-                    expression { env.GCHECK_CHANGED == 'true' }
-                    not { expression { params.DESTROY } }
-                }
+                not { expression { params.DESTROY } }
             }
             steps {
                 sh '''
@@ -437,16 +385,13 @@ pipeline {
         }
 
         // ---------------------------------------------------------------------
-        // 9. GATE TESTS
+        // 10. GATE TESTS
         // Runs your existing run_all_gates.sh — verifies Secrets Manager,
         // IAM role, RDS network config. Archives JSON results.
         // ---------------------------------------------------------------------
         stage('Gate Tests') {
             when {
-                allOf {
-                    expression { env.GCHECK_CHANGED == 'true' }
-                    not { expression { params.DESTROY } }
-                }
+                not { expression { params.DESTROY } }
             }
             steps {
                 dir("${params.TF_DIR}/python") {
@@ -479,17 +424,14 @@ pipeline {
         }
 
         // ---------------------------------------------------------------------
-        // 10. ROVER IMAGE
+        // 11. ROVER IMAGE
         // Builds rover-tf-1.5.7 Docker image from Dockerfile.rover if it does
         // not already exist on the Jenkins host. Idempotent — skipped when the
         // image is present, so subsequent builds add ~0s overhead.
         // ---------------------------------------------------------------------
         stage('Rover Image') {
             when {
-                allOf {
-                    expression { env.GCHECK_CHANGED == 'true' }
-                    not { expression { params.DESTROY } }
-                }
+                not { expression { params.DESTROY } }
             }
             steps {
                 dir("${params.TF_DIR}") {
@@ -507,7 +449,7 @@ pipeline {
         }
 
         // ---------------------------------------------------------------------
-        // 11. ROVER GRAPH
+        // 12. ROVER GRAPH
         // Generates a visual SVG map of all Terraform resources using Rover.
         // Uses the rover-tf-1.5.7 Docker image built in the previous stage.
         // Output: G-Check/rover.svg — archived as a build artifact.
@@ -515,10 +457,7 @@ pipeline {
         // ---------------------------------------------------------------------
         stage('Rover Graph') {
             when {
-                allOf {
-                    expression { env.GCHECK_CHANGED == 'true' }
-                    not { expression { params.DESTROY } }
-                }
+                not { expression { params.DESTROY } }
             }
             steps {
                 withCredentials([
@@ -549,13 +488,10 @@ pipeline {
         }
 
         // ---------------------------------------------------------------------
-        // 12. NOTIFY
+        // 13. NOTIFY
         // Print a final summary. Extend this to Slack/email as needed.
         // ---------------------------------------------------------------------
         stage('Notify') {
-            when {
-                expression { env.GCHECK_CHANGED == 'true' }
-            }
             steps {
                 script {
                     def action = params.DESTROY ? 'DESTROY' : 'DEPLOY'
@@ -591,14 +527,15 @@ pipeline {
             echo "BUILD ABORTED — Plan was reviewed and rejected. No changes applied."
         }
         always {
-            // Remove stale .terraform/ dirs to avoid lock file conflicts on next run.
-            // deleteDir() is built-in — no ws-cleanup plugin required.
-            sh 'rm -rf "${WORKSPACE}/${TF_DIR}/.terraform" || true'
+            cleanWs(
+                cleanWhenSuccess: false,
+                cleanWhenFailure: false,
+                cleanWhenAborted: true,
+                deleteDirs: true,
+                patterns: [[pattern: '**/.terraform/**', type: 'INCLUDE']]
+            )
         }
     }
 }
 
-// webhook-test: 2026-03-29 LIVE — GitHubPushTrigger registered, SCMTriggerCause expected
-
-// pipeline-init: 2026-04-05 — all imports resolved, final retrigger
-// pipeline-stable: 2026-04-11T22:50:34Z
+// pipeline-stable: 2026-04-18
