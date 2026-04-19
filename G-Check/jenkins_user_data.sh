@@ -98,6 +98,7 @@ dnf install -y python3.12 python3.12-pip
 alternatives --install /usr/bin/python3 python3 /usr/bin/python3.12 20
 alternatives --set python3 /usr/bin/python3.12
 ln -sf /usr/bin/python3.12 /usr/local/bin/python3
+ln -sf /usr/bin/python3.12 /usr/bin/python
 /usr/bin/python3.12 -m pip install --quiet boto3 botocore
 echo "=== Python: $(python3 --version) ==="
 echo "=== AWS CLI: $(aws --version) ==="
