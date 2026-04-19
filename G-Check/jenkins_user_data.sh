@@ -100,6 +100,9 @@ alternatives --set python3 /usr/bin/python3.12
 ln -sf /usr/bin/python3.12 /usr/local/bin/python3
 ln -sf /usr/bin/python3.12 /usr/bin/python
 /usr/bin/python3.12 -m pip install --quiet boto3 botocore
+# awscli2 package shebang is /usr/bin/python3 — after alternatives change it
+# now points to 3.12 where awscli is not installed. Pin shebang to python3.9.
+sed -i '1s|.*|#!/usr/bin/python3.9 -s|' /usr/bin/aws
 echo "=== Python: $(python3 --version) ==="
 echo "=== AWS CLI: $(aws --version) ==="
 
