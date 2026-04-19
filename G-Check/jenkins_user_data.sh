@@ -92,10 +92,13 @@ systemctl start docker
 usermod -aG docker jenkins
 echo "=== Docker installed: $(docker --version) ==="
 
-# Python 3 + pip — AL2023 built-in, confirm and install boto3 for gate scripts
-# python3 and aws-cli ship with AL2023 — explicit install is a no-op if present
-dnf install -y python3 python3-pip
-pip3 install --quiet boto3 botocore
+# Python 3.12 — AL2023 default (python3) resolves to 3.9 which is EOL (Oct 2025).
+# Explicitly install 3.12, set it as the system default, then install boto3.
+dnf install -y python3.12 python3.12-pip
+alternatives --install /usr/bin/python3 python3 /usr/bin/python3.12 20
+alternatives --set python3 /usr/bin/python3.12
+ln -sf /usr/bin/python3.12 /usr/local/bin/python3
+/usr/bin/python3.12 -m pip install --quiet boto3 botocore
 echo "=== Python: $(python3 --version) ==="
 echo "=== AWS CLI: $(aws --version) ==="
 
