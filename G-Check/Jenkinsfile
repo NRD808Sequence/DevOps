@@ -468,19 +468,21 @@ pipeline {
                 withCredentials([
                     string(credentialsId: 'vandelay-db-password', variable: 'TF_VAR_db_password')
                 ]) {
-                    sh '''
+                    sh """
                         # Rover uses TF 1.5.7 inside the container; the pipeline
                         # initialized .terraform/ with TF 1.14.x — incompatible backend
                         # state. Run terraform init -reconfigure inside the container
                         # first so Rover gets a clean, version-matched backend state.
-                        docker run --rm \
-                          -v "${WORKSPACE}/${TF_DIR}:/src" \
-                          -v "$HOME/.aws:/root/.aws:ro" \
-                          -e TF_VAR_db_password="$TF_VAR_db_password" \
-                          --entrypoint sh \
-                          rover-tf-1.5.7:latest \
+                        # Note: \${env.WORKSPACE} and \${params.TF_DIR} are Groovy-interpolated
+                        # so the literal path is embedded before the shell sees it.
+                        docker run --rm \\
+                          -v "${env.WORKSPACE}/${params.TF_DIR}:/src" \\
+                          -v "\$HOME/.aws:/root/.aws:ro" \\
+                          -e TF_VAR_db_password="\$TF_VAR_db_password" \\
+                          --entrypoint sh \\
+                          rover-tf-1.5.7:latest \\
                           -c "terraform -chdir=/src init -reconfigure -backend=true && rover -workingDir /src -genImage"
-                    '''
+                    """
                 }
             }
             post {
