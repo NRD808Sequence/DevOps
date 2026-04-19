@@ -91,6 +91,12 @@ resource "aws_instance" "vandelay_ec201" {
 
   user_data = file("${path.module}/user_data.sh")
 
+  # IMDSv2 required — blocks SSRF-based credential theft (OWASP A10)
+  metadata_options {
+    http_tokens   = "required"
+    http_endpoint = "enabled"
+  }
+
   tags = {
     Name = "${local.name_prefix}-ec201"
   }

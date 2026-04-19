@@ -135,6 +135,13 @@ resource "aws_instance" "vandelay_jenkins" {
 
   user_data = file("${path.module}/jenkins_user_data.sh")
 
+  # IMDSv2 required — blocks SSRF-based credential theft (OWASP A10)
+  # Jenkins IAM role has iam:* — IMDSv1 would be full account takeover via SSRF
+  metadata_options {
+    http_tokens   = "required"
+    http_endpoint = "enabled"
+  }
+
   # Prevent Terraform from replacing the running Jenkins instance when
   # user_data or AMI changes. Jenkins bootstraps once on first launch —
   # replacing it mid-pipeline would kill the running build.

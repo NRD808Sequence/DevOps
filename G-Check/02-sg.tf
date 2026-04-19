@@ -8,20 +8,12 @@ resource "aws_security_group" "vandelay_ec2_sg01" {
   description = "EC2 app security group"
   vpc_id      = aws_vpc.vandelay_vpc01.id
 
-  # Inbound: Allow HTTP (port 80) from anywhere for web application
-  ingress {
-    from_port   = 80
-    to_port     = 80
-    protocol    = "tcp"
-    cidr_blocks = ["0.0.0.0/0"]
-    description = "Allow HTTP from anywhere"
-  }
-
   # SSH removed — use AWS Systems Manager Session Manager (SSM) instead.
   # AmazonSSMManagedInstanceCore is attached to vandelay-ec2-role01.
   # Connect via: aws ssm start-session --target <instance-id>
 
-  # Inbound: Allow HTTP from ALB (Bonus B)
+  # Inbound: Allow HTTP from ALB only — direct internet access removed (OWASP A05)
+  # All traffic must pass through CloudFront WAF → ALB before reaching EC2
   ingress {
     from_port       = 80
     to_port         = 80

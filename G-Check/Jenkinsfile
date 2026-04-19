@@ -334,6 +334,11 @@ pipeline {
                             returnStdout: true
                         ).trim()
 
+                        env.APP_URL = sh(
+                            script: "terraform output -raw vandelay_app_url_via_cloudfront",
+                            returnStdout: true
+                        ).trim()
+
                         env.JENKINS_URL_OUTPUT = sh(
                             script: "terraform output -raw jenkins_url",
                             returnStdout: true
@@ -366,11 +371,11 @@ pipeline {
             }
             steps {
                 sh '''
-                    echo "Waiting for app to be reachable (up to 3 min)..."
+                    echo "Waiting for app to be reachable via CloudFront (up to 3 min)..."
                     for i in $(seq 1 18); do
                         STATUS=$(curl -s -o /dev/null -w "%{http_code}" \
                             --connect-timeout 5 \
-                            "http://$EC2_PUBLIC_IP/" || echo "000")
+                            "$APP_URL" || echo "000")
                         echo "Attempt $i: HTTP $STATUS"
                         if [ "$STATUS" = "200" ]; then
                             echo "SMOKE TEST PASSED — app returned HTTP 200"
