@@ -105,12 +105,28 @@ pipeline {
         stage('Validate Parameters') {
             steps {
                 script {
+                    // --- C1: TF_DIR path traversal guard (OWASP A03) ---
+                    // Prevents Docker volume mount hijack via crafted TF_DIR values.
                     if (!(params.TF_DIR ==~ /^[a-zA-Z0-9_\-\/]+$/)) {
                         error("SECURITY: TF_DIR contains invalid characters: '${params.TF_DIR}'. Only alphanumeric, dash, underscore, and slash are allowed.")
                     }
                     if (params.TF_DIR.contains('..')) {
                         error("SECURITY: TF_DIR path traversal detected: '${params.TF_DIR}'. Value cannot contain '..'.")
                     }
+
+                    // --- C2: DESTROY + AUTO_APPROVE admin-only guard (OWASP A04) ---
+                    // Without this check any user with Build-with-Parameters access
+                    // can silently destroy the entire AWS infrastructure by setting
+                    // both flags, bypassing the Destroy Approval Gate entirely.
+                    if (params.DESTROY && params.AUTO_APPROVE) {
+                        def caller = currentBuild.rawBuild
+                            .getCause(hudson.model.Cause.UserIdCause)?.userId ?: 'unknown'
+                        if (caller != 'admin') {
+                            error("SECURITY: DESTROY+AUTO_APPROVE combination requires admin. Triggered by: '${caller}'. Aborting.")
+                        }
+                        echo "DESTROY+AUTO_APPROVE authorized — caller confirmed as admin."
+                    }
+
                     echo "Parameter validation passed — TF_DIR: '${params.TF_DIR}'"
                 }
             }
