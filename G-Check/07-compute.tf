@@ -250,6 +250,11 @@ resource "aws_serverlessapplicationrepository_cloudformation_stack" "rotation_la
   }
 
   tags = local.common_tags
+
+  # Wait for the Jenkins IAM policy to be applied before modifying the SAR stack.
+  # Without this, Terraform applies both in parallel and the SAR call races the
+  # IAM propagation, producing a CreateCloudFormationChangeSet AccessDeniedException.
+  depends_on = [aws_iam_role_policy.vandelay_jenkins_terraform]
 }
 
 resource "aws_lambda_permission" "secrets_manager_rotation" {
