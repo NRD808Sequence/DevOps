@@ -107,6 +107,7 @@ resource "aws_iam_role_policy" "vandelay_jenkins_terraform" {
           "serverlessrepo:CreateCloudFormationTemplate",
           "serverlessrepo:GetCloudFormationTemplate",
           "serverlessrepo:ListApplicationVersions",
+          "serverlessrepo:CreateCloudFormationChangeSet",
           "cloudformation:CreateChangeSet",
           "cloudformation:DescribeChangeSet",
           "cloudformation:ExecuteChangeSet",
