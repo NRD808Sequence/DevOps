@@ -96,6 +96,27 @@ pipeline {
     stages {
 
         // ---------------------------------------------------------------------
+        // 0. VALIDATE PARAMETERS
+        // Security: prevent TF_DIR path traversal into Docker volume mounts.
+        // TF_DIR is used directly in --volume flags — an attacker with
+        // "Build with Parameters" access could set it to ../../etc and mount
+        // arbitrary host paths into the container (OWASP A03 / C1).
+        // ---------------------------------------------------------------------
+        stage('Validate Parameters') {
+            steps {
+                script {
+                    if (!(params.TF_DIR ==~ /^[a-zA-Z0-9_\-\/]+$/)) {
+                        error("SECURITY: TF_DIR contains invalid characters: '${params.TF_DIR}'. Only alphanumeric, dash, underscore, and slash are allowed.")
+                    }
+                    if (params.TF_DIR.contains('..')) {
+                        error("SECURITY: TF_DIR path traversal detected: '${params.TF_DIR}'. Value cannot contain '..'.")
+                    }
+                    echo "Parameter validation passed — TF_DIR: '${params.TF_DIR}'"
+                }
+            }
+        }
+
+        // ---------------------------------------------------------------------
         // 1. CHECKOUT
         // ---------------------------------------------------------------------
         stage('Checkout') {
