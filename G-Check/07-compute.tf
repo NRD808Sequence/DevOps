@@ -15,7 +15,7 @@ resource "aws_db_instance" "vandelay_rds01" {
   vpc_security_group_ids = [aws_security_group.vandelay_rds_sg01.id]
 
   publicly_accessible = false
-  skip_final_snapshot = true
+  skip_final_snapshot = false
 
   # Ignore password changes - Secrets Manager rotation manages the password
   lifecycle {

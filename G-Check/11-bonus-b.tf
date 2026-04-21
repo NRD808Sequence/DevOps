@@ -111,7 +111,8 @@ resource "aws_lb" "vandelay_alb01" {
   security_groups    = [aws_security_group.vandelay_alb_sg01.id]
   subnets            = aws_subnet.vandelay_public_subnets[*].id
 
-  enable_deletion_protection = false
+  # Prevents accidental ALB deletion via Terraform or console (OWASP A05 — M2)
+  enable_deletion_protection = true
 
   # ALB Access Logs (enabled via variable)
   dynamic "access_logs" {
