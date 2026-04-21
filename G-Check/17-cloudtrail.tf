@@ -106,8 +106,13 @@ resource "aws_cloudtrail" "vandelay_trail" {
   # Detects if log files have been tampered with or deleted.
   enable_log_file_validation = true
 
-  # Bucket policy must exist before CloudTrail can verify write access
-  depends_on = [aws_s3_bucket_policy.vandelay_cloudtrail]
+  # Bucket policy must exist before CloudTrail can verify write access.
+  # Jenkins IAM policy must also be applied first — cloudtrail:CreateTrail
+  # races the policy propagation if both run in parallel (same pattern as SAR stack).
+  depends_on = [
+    aws_s3_bucket_policy.vandelay_cloudtrail,
+    aws_iam_role_policy.vandelay_jenkins_terraform
+  ]
 
   tags = local.common_tags
 }
