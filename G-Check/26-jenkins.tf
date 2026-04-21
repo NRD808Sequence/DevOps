@@ -95,7 +95,8 @@ resource "aws_iam_role_policy" "vandelay_jenkins_terraform" {
           "route53:*", "route53domains:*", "cloudwatch:*",
           "logs:*", "iam:*", "lambda:*", "s3:*", "sns:*",
           "sqs:*", "acm:*", "dynamodb:*", "autoscaling:*",
-          "ssm:*", "kms:*", "events:*", "firehose:*"
+          "ssm:*", "kms:*", "events:*", "firehose:*",
+          "cloudtrail:*"
         ]
         Resource = "*"
       },
