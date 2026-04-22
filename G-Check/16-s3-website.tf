@@ -75,9 +75,12 @@ resource "aws_s3_bucket_policy" "vandelay_deliverables_policy" {
 }
 
 ############################################
-# Objects — placeholder index page
-# Screenshots will be added after pipeline
-# is confirmed working.
+# Objects — index page + all deliverable screenshots
+#
+# fileset() walks _deliverables/**/*.png at plan time and returns
+# a set of relative paths (e.g. "2026-04-13/screenshots/foo.png").
+# for_each creates one aws_s3_object per file — Terraform detects
+# changes via etag so only new/modified files are re-uploaded.
 ############################################
 
 resource "aws_s3_object" "vandelay_deliverables_index" {
@@ -86,6 +89,22 @@ resource "aws_s3_object" "vandelay_deliverables_index" {
   source       = "${path.module}/website/index.html"
   content_type = "text/html"
   etag         = filemd5("${path.module}/website/index.html")
+
+  depends_on = [aws_s3_bucket_policy.vandelay_deliverables_policy]
+}
+
+locals {
+  deliverable_screenshots = fileset("${path.module}/_deliverables", "**/*.png")
+}
+
+resource "aws_s3_object" "deliverable_screenshots" {
+  for_each = local.deliverable_screenshots
+
+  bucket       = aws_s3_bucket.vandelay_deliverables.id
+  key          = "deliverables/${each.value}"
+  source       = "${path.module}/_deliverables/${each.value}"
+  content_type = "image/png"
+  etag         = filemd5("${path.module}/_deliverables/${each.value}")
 
   depends_on = [aws_s3_bucket_policy.vandelay_deliverables_policy]
 }
