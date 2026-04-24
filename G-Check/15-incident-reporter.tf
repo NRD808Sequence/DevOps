@@ -109,7 +109,7 @@ resource "aws_iam_role_policy" "incident_reporter_sns" {
         Sid      = "SNSPublish"
         Effect   = "Allow"
         Action   = "sns:Publish"
-        Resource = aws_sns_topic.vandelay_sns_topic01.arn
+        Resource = aws_sns_topic.vandelay_notifications.arn
       }
     ]
   })
@@ -221,7 +221,7 @@ resource "aws_lambda_function" "incident_reporter" {
   environment {
     variables = {
       BEDROCK_MODEL_ID = "anthropic.claude-3-haiku-20240307-v1:0"
-      SNS_TOPIC_ARN    = aws_sns_topic.vandelay_sns_topic01.arn
+      SNS_TOPIC_ARN    = aws_sns_topic.vandelay_notifications.arn
       REPORT_BUCKET    = aws_s3_bucket.incident_reports.id
       APP_LOG_GROUP    = aws_cloudwatch_log_group.vandelay_log_group01.name
       WAF_LOG_GROUP    = "" # Set to WAF log group name if WAF logging is enabled
