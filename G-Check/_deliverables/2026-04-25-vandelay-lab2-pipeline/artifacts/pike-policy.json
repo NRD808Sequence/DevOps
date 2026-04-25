@@ -1,0 +1,581 @@
+{
+    "Version": "2012-10-17",
+    "Statement": [
+        {
+            "Sid": "VisualEditor0",
+            "Effect": "Allow",
+            "Action": [
+                "SNS:GetSubscriptionAttributes",
+                "SNS:Subscribe",
+                "SNS:Unsubscribe"
+            ],
+            "Resource": [
+                "*"
+            ]
+        },
+        {
+            "Sid": "VisualEditor1",
+            "Effect": "Allow",
+            "Action": [
+                "acm:AddTagsToCertificate",
+                "acm:DeleteCertificate",
+                "acm:DescribeCertificate",
+                "acm:GetCertificate",
+                "acm:ListTagsForCertificate",
+                "acm:RemoveTagsFromCertificate",
+                "acm:RequestCertificate"
+            ],
+            "Resource": [
+                "*"
+            ]
+        },
+        {
+            "Sid": "VisualEditor2",
+            "Effect": "Allow",
+            "Action": [
+                "amplify:DisassociateWebACL",
+                "amplify:GetWebACLForResource"
+            ],
+            "Resource": [
+                "*"
+            ]
+        },
+        {
+            "Sid": "VisualEditor3",
+            "Effect": "Allow",
+            "Action": [
+                "apigateway:SetWebACL"
+            ],
+            "Resource": [
+                "*"
+            ]
+        },
+        {
+            "Sid": "VisualEditor4",
+            "Effect": "Allow",
+            "Action": [
+                "apprunner:AssociateWebAcl",
+                "apprunner:DescribeWebAclForService",
+                "apprunner:DisassociateWebAcl",
+                "apprunner:ListAssociatedServicesForWebAcl"
+            ],
+            "Resource": [
+                "*"
+            ]
+        },
+        {
+            "Sid": "VisualEditor5",
+            "Effect": "Allow",
+            "Action": [
+                "appsync:SetWebACL"
+            ],
+            "Resource": [
+                "*"
+            ]
+        },
+        {
+            "Sid": "VisualEditor6",
+            "Effect": "Allow",
+            "Action": [
+                "cloudfront:CreateCachePolicy",
+                "cloudfront:CreateDistribution",
+                "cloudfront:CreateDistributionWithTags",
+                "cloudfront:CreateOriginRequestPolicy",
+                "cloudfront:CreateResponseHeadersPolicy",
+                "cloudfront:DeleteCachePolicy",
+                "cloudfront:DeleteDistribution",
+                "cloudfront:DeleteOriginRequestPolicy",
+                "cloudfront:DeleteResponseHeadersPolicy",
+                "cloudfront:GetCachePolicy",
+                "cloudfront:GetDistribution",
+                "cloudfront:GetDistributionConfig",
+                "cloudfront:GetOriginRequestPolicy",
+                "cloudfront:GetResponseHeadersPolicy",
+                "cloudfront:ListCachePolicies",
+                "cloudfront:ListOriginRequestPolicies",
+                "cloudfront:ListTagsForResource",
+                "cloudfront:TagResource",
+                "cloudfront:UntagResource",
+                "cloudfront:UpdateCachePolicy",
+                "cloudfront:UpdateDistribution",
+                "cloudfront:UpdateDistributionWithStagingConfig",
+                "cloudfront:UpdateOriginRequestPolicy",
+                "cloudfront:UpdateResponseHeadersPolicy"
+            ],
+            "Resource": [
+                "*"
+            ]
+        },
+        {
+            "Sid": "VisualEditor7",
+            "Effect": "Allow",
+            "Action": [
+                "cloudtrail:AddTags",
+                "cloudtrail:CreateTrail",
+                "cloudtrail:DeleteTrail",
+                "cloudtrail:DescribeTrails",
+                "cloudtrail:GetEventSelectors",
+                "cloudtrail:GetTrailStatus",
+                "cloudtrail:ListTags",
+                "cloudtrail:RemoveTags",
+                "cloudtrail:StartLogging",
+                "cloudtrail:UpdateTrail"
+            ],
+            "Resource": [
+                "*"
+            ]
+        },
+        {
+            "Sid": "VisualEditor8",
+            "Effect": "Allow",
+            "Action": [
+                "cloudwatch:DeleteAlarms",
+                "cloudwatch:DeleteDashboards",
+                "cloudwatch:DescribeAlarms",
+                "cloudwatch:GetDashboard",
+                "cloudwatch:ListTagsForResource",
+                "cloudwatch:PutDashboard",
+                "cloudwatch:PutMetricAlarm",
+                "cloudwatch:TagResource",
+                "cloudwatch:UnTagResource"
+            ],
+            "Resource": [
+                "*"
+            ]
+        },
+        {
+            "Sid": "VisualEditor9",
+            "Effect": "Allow",
+            "Action": [
+                "cognito-idp:AssociateWebACL",
+                "cognito-idp:DisassociateWebACL",
+                "cognito-idp:GetWebACLForResource",
+                "cognito-idp:ListResourcesForWebACL"
+            ],
+            "Resource": [
+                "*"
+            ]
+        },
+        {
+            "Sid": "VisualEditor10",
+            "Effect": "Allow",
+            "Action": [
+                "dynamodb:DeleteItem",
+                "dynamodb:DescribeTable",
+                "dynamodb:GetItem",
+                "dynamodb:PutItem"
+            ],
+            "Resource": [
+                "*"
+            ]
+        },
+        {
+            "Sid": "VisualEditor11",
+            "Effect": "Allow",
+            "Action": [
+                "ec2:AllocateAddress",
+                "ec2:AssignPrivateNatGatewayAddress",
+                "ec2:AssociateAddress",
+                "ec2:AssociateIamInstanceProfile",
+                "ec2:AssociateNatGatewayAddress",
+                "ec2:AssociateRouteTable",
+                "ec2:AssociateSubnetCidrBlock",
+                "ec2:AssociateVerifiedAccessInstanceWebAcl",
+                "ec2:AttachInternetGateway",
+                "ec2:AttachVolume",
+                "ec2:AuthorizeSecurityGroupEgress",
+                "ec2:AuthorizeSecurityGroupIngress",
+                "ec2:CreateInternetGateway",
+                "ec2:CreateNatGateway",
+                "ec2:CreateRoute",
+                "ec2:CreateRouteTable",
+                "ec2:CreateSecurityGroup",
+                "ec2:CreateSubnet",
+                "ec2:CreateTags",
+                "ec2:CreateVPC",
+                "ec2:CreateVolume",
+                "ec2:CreateVpcEndpoint",
+                "ec2:DeleteInternetGateway",
+                "ec2:DeleteNatGateway",
+                "ec2:DeleteNetworkInterface",
+                "ec2:DeleteRoute",
+                "ec2:DeleteRouteTable",
+                "ec2:DeleteSecurityGroup",
+                "ec2:DeleteSubnet",
+                "ec2:DeleteTags",
+                "ec2:DeleteVPC",
+                "ec2:DeleteVolume",
+                "ec2:DeleteVpcEndpoints",
+                "ec2:DescribeAccountAttributes",
+                "ec2:DescribeAddresses",
+                "ec2:DescribeAvailabilityZones",
+                "ec2:DescribeIamInstanceProfileAssociations",
+                "ec2:DescribeInstanceAttribute",
+                "ec2:DescribeInstanceCreditSpecifications",
+                "ec2:DescribeInstanceTypes",
+                "ec2:DescribeInstances",
+                "ec2:DescribeInternetGateways",
+                "ec2:DescribeManagedPrefixLists",
+                "ec2:DescribeNatGateways",
+                "ec2:DescribeNetworkAcls",
+                "ec2:DescribeNetworkInterfaces",
+                "ec2:DescribePrefixLists",
+                "ec2:DescribeRouteTables",
+                "ec2:DescribeSecurityGroupRules",
+                "ec2:DescribeSecurityGroups",
+                "ec2:DescribeSnapshots",
+                "ec2:DescribeSubnets",
+                "ec2:DescribeTags",
+                "ec2:DescribeVerifiedAccessInstanceWebAclAssociations",
+                "ec2:DescribeVolumeAttribute",
+                "ec2:DescribeVolumes",
+                "ec2:DescribeVpcAttribute",
+                "ec2:DescribeVpcEndpoints",
+                "ec2:DescribeVpcs",
+                "ec2:DetachInternetGateway",
+                "ec2:DetachNetworkInterface",
+                "ec2:DetachVolume",
+                "ec2:DisassociateAddress",
+                "ec2:DisassociateIamInstanceProfile",
+                "ec2:DisassociateNatGatewayAddress",
+                "ec2:DisassociateRouteTable",
+                "ec2:DisassociateSubnetCidrBlock",
+                "ec2:DisassociateVerifiedAccessInstanceWebAcl",
+                "ec2:GetManagedPrefixListEntries",
+                "ec2:GetVerifiedAccessInstanceWebAcl",
+                "ec2:ModifyInstanceAttribute",
+                "ec2:ModifySubnetAttribute",
+                "ec2:ModifyVolume",
+                "ec2:ModifyVolumeAttribute",
+                "ec2:ModifyVpcAttribute",
+                "ec2:ModifyVpcEndpoint",
+                "ec2:ModifyVpcTenancy",
+                "ec2:ReleaseAddress",
+                "ec2:ReplaceIamInstanceProfileAssociation",
+                "ec2:ReplaceRoute",
+                "ec2:ReplaceRouteTableAssociation",
+                "ec2:RevokeSecurityGroupEgress",
+                "ec2:RevokeSecurityGroupIngress",
+                "ec2:RunInstances",
+                "ec2:StartInstances",
+                "ec2:StopInstances",
+                "ec2:TerminateInstances",
+                "ec2:UnassignPrivateNatGatewayAddress"
+            ],
+            "Resource": [
+                "*"
+            ]
+        },
+        {
+            "Sid": "VisualEditor12",
+            "Effect": "Allow",
+            "Action": [
+                "elasticloadbalancing:AddListenerCertificates",
+                "elasticloadbalancing:AddTags",
+                "elasticloadbalancing:AttachLoadBalancerToSubnets",
+                "elasticloadbalancing:CreateListener",
+                "elasticloadbalancing:CreateLoadBalancer",
+                "elasticloadbalancing:CreateLoadBalancerListeners",
+                "elasticloadbalancing:CreateRule",
+                "elasticloadbalancing:CreateTargetGroup",
+                "elasticloadbalancing:DeleteListener",
+                "elasticloadbalancing:DeleteLoadBalancer",
+                "elasticloadbalancing:DeleteRule",
+                "elasticloadbalancing:DeleteTargetGroup",
+                "elasticloadbalancing:DeregisterTargets",
+                "elasticloadbalancing:DescribeListenerCertificates",
+                "elasticloadbalancing:DescribeListeners",
+                "elasticloadbalancing:DescribeLoadBalancerAttributes",
+                "elasticloadbalancing:DescribeLoadBalancers",
+                "elasticloadbalancing:DescribeRules",
+                "elasticloadbalancing:DescribeTags",
+                "elasticloadbalancing:DescribeTargetGroupAttributes",
+                "elasticloadbalancing:DescribeTargetGroups",
+                "elasticloadbalancing:DescribeTargetHealth",
+                "elasticloadbalancing:ModifyListener",
+                "elasticloadbalancing:ModifyLoadBalancerAttributes",
+                "elasticloadbalancing:ModifyRule",
+                "elasticloadbalancing:ModifyTargetGroupAttributes",
+                "elasticloadbalancing:RegisterTargets",
+                "elasticloadbalancing:RemoveListenerCertificates",
+                "elasticloadbalancing:RemoveTags",
+                "elasticloadbalancing:SetRulePriorities",
+                "elasticloadbalancing:SetSecurityGroups",
+                "elasticloadbalancing:SetWebACL",
+                "elasticloadbalancing:SetWebAcl"
+            ],
+            "Resource": [
+                "*"
+            ]
+        },
+        {
+            "Sid": "VisualEditor13",
+            "Effect": "Allow",
+            "Action": [
+                "iam:AddRoleToInstanceProfile",
+                "iam:AttachRolePolicy",
+                "iam:CreateInstanceProfile",
+                "iam:CreatePolicy",
+                "iam:CreateRole",
+                "iam:CreateServiceLinkedRole",
+                "iam:DeleteInstanceProfile",
+                "iam:DeletePolicy",
+                "iam:DeleteRole",
+                "iam:DeleteRolePolicy",
+                "iam:DetachRolePolicy",
+                "iam:GetInstanceProfile",
+                "iam:GetPolicy",
+                "iam:GetPolicyVersion",
+                "iam:GetRole",
+                "iam:GetRolePolicy",
+                "iam:ListAttachedRolePolicies",
+                "iam:ListInstanceProfilesForRole",
+                "iam:ListPolicyVersions",
+                "iam:ListRolePolicies",
+                "iam:ListRoles",
+                "iam:PassRole",
+                "iam:PutRolePolicy",
+                "iam:RemoveRoleFromInstanceProfile",
+                "iam:TagRole",
+                "iam:UntagRole"
+            ],
+            "Resource": [
+                "*"
+            ]
+        },
+        {
+            "Sid": "VisualEditor14",
+            "Effect": "Allow",
+            "Action": [
+                "kms:Decrypt"
+            ],
+            "Resource": [
+                "*"
+            ]
+        },
+        {
+            "Sid": "VisualEditor15",
+            "Effect": "Allow",
+            "Action": [
+                "lambda:AddPermission",
+                "lambda:CreateFunction",
+                "lambda:DeleteFunction",
+                "lambda:GetFunction",
+                "lambda:GetFunctionCodeSigningConfig",
+                "lambda:GetPolicy",
+                "lambda:InvokeFunction",
+                "lambda:ListVersionsByFunction",
+                "lambda:RemovePermission",
+                "lambda:TagResource",
+                "lambda:UntagResource"
+            ],
+            "Resource": [
+                "*"
+            ]
+        },
+        {
+            "Sid": "VisualEditor16",
+            "Effect": "Allow",
+            "Action": [
+                "logs:CreateLogGroup",
+                "logs:DeleteLogGroup",
+                "logs:DeleteRetentionPolicy",
+                "logs:DescribeLogGroups",
+                "logs:ListTagsForResource",
+                "logs:ListTagsLogGroup",
+                "logs:PutRetentionPolicy",
+                "logs:TagLogGroup",
+                "logs:UntagLogGroup"
+            ],
+            "Resource": [
+                "*"
+            ]
+        },
+        {
+            "Sid": "VisualEditor17",
+            "Effect": "Allow",
+            "Action": [
+                "rds:AddTagsToResource",
+                "rds:CreateDBInstance",
+                "rds:CreateDBSnapshot",
+                "rds:CreateDBSubnetGroup",
+                "rds:DeleteDBInstance",
+                "rds:DeleteDBSubnetGroup",
+                "rds:DescribeDBClusters",
+                "rds:DescribeDBEngineVersions",
+                "rds:DescribeDBInstanceAutomatedBackups",
+                "rds:DescribeDBInstances",
+                "rds:DescribeDBParameterGroups",
+                "rds:DescribeDBSubnetGroups",
+                "rds:ListTagsForResource",
+                "rds:ModifyDBInstance",
+                "rds:ModifyDBSubnetGroup",
+                "rds:RebootDBInstance",
+                "rds:RemoveTagsFromResource"
+            ],
+            "Resource": [
+                "*"
+            ]
+        },
+        {
+            "Sid": "VisualEditor18",
+            "Effect": "Allow",
+            "Action": [
+                "route53:ChangeResourceRecordSets",
+                "route53:GetChange",
+                "route53:GetHostedZone",
+                "route53:ListHostedZones",
+                "route53:ListResourceRecordSets",
+                "route53:ListTagsForResource"
+            ],
+            "Resource": [
+                "*"
+            ]
+        },
+        {
+            "Sid": "VisualEditor19",
+            "Effect": "Allow",
+            "Action": [
+                "s3:CreateBucket",
+                "s3:DeleteBucket",
+                "s3:DeleteBucketPolicy",
+                "s3:DeleteBucketWebsite",
+                "s3:DeleteObject",
+                "s3:GetAccelerateConfiguration",
+                "s3:GetBucketAcl",
+                "s3:GetBucketCORS",
+                "s3:GetBucketLocation",
+                "s3:GetBucketLogging",
+                "s3:GetBucketObjectLockConfiguration",
+                "s3:GetBucketOwnershipControls",
+                "s3:GetBucketPolicy",
+                "s3:GetBucketPublicAccessBlock",
+                "s3:GetBucketRequestPayment",
+                "s3:GetBucketTagging",
+                "s3:GetBucketVersioning",
+                "s3:GetBucketWebsite",
+                "s3:GetEncryptionConfiguration",
+                "s3:GetLifecycleConfiguration",
+                "s3:GetObject",
+                "s3:GetObjectAcl",
+                "s3:GetObjectTagging",
+                "s3:GetReplicationConfiguration",
+                "s3:ListBucket",
+                "s3:PutBucketLogging",
+                "s3:PutBucketOwnershipControls",
+                "s3:PutBucketPolicy",
+                "s3:PutBucketPublicAccessBlock",
+                "s3:PutBucketTagging",
+                "s3:PutBucketVersioning",
+                "s3:PutBucketWebsite",
+                "s3:PutEncryptionConfiguration",
+                "s3:PutLifecycleConfiguration",
+                "s3:PutObject"
+            ],
+            "Resource": [
+                "*"
+            ]
+        },
+        {
+            "Sid": "VisualEditor20",
+            "Effect": "Allow",
+            "Action": [
+                "secretsmanager:CancelRotateSecret",
+                "secretsmanager:DescribeSecret",
+                "secretsmanager:GetSecretValue",
+                "secretsmanager:RotateSecret"
+            ],
+            "Resource": [
+                "*"
+            ]
+        },
+        {
+            "Sid": "VisualEditor21",
+            "Effect": "Allow",
+            "Action": [
+                "serverlessrepo:CreateCloudFormationTemplate",
+                "serverlessrepo:GetApplication",
+                "serverlessrepo:GetCloudFormationTemplate"
+            ],
+            "Resource": [
+                "*"
+            ]
+        },
+        {
+            "Sid": "VisualEditor22",
+            "Effect": "Allow",
+            "Action": [
+                "sns:CreateTopic",
+                "sns:DeleteTopic",
+                "sns:GetTopicAttributes",
+                "sns:ListTagsForResource",
+                "sns:SetTopicAttributes"
+            ],
+            "Resource": [
+                "*"
+            ]
+        },
+        {
+            "Sid": "VisualEditor23",
+            "Effect": "Allow",
+            "Action": [
+                "ssm:AddTagsToResource",
+                "ssm:DeleteParameter",
+                "ssm:DescribeParameters",
+                "ssm:GetParameter",
+                "ssm:GetParameters",
+                "ssm:ListTagsForResource",
+                "ssm:PutParameter",
+                "ssm:RemoveTagsFromResource"
+            ],
+            "Resource": [
+                "*"
+            ]
+        },
+        {
+            "Sid": "VisualEditor24",
+            "Effect": "Allow",
+            "Action": [
+                "vpc-lattice:CreateServiceNetworkVpcEndpointAssociation",
+                "vpc-lattice:DescribeServiceNetworkVpcEndpointAssociation"
+            ],
+            "Resource": [
+                "*"
+            ]
+        },
+        {
+            "Sid": "VisualEditor25",
+            "Effect": "Allow",
+            "Action": [
+                "vpce:AllowMultiRegion"
+            ],
+            "Resource": [
+                "*"
+            ]
+        },
+        {
+            "Sid": "VisualEditor26",
+            "Effect": "Allow",
+            "Action": [
+                "wafv2:AssociateWebACL",
+                "wafv2:CreateWebACL",
+                "wafv2:DeleteWebACL",
+                "wafv2:DisassociateWebACL",
+                "wafv2:GetLoggingConfiguration",
+                "wafv2:GetPermissionPolicy",
+                "wafv2:GetWebACL",
+                "wafv2:GetWebACLForResource",
+                "wafv2:ListTagsForResource",
+                "wafv2:PutLoggingConfiguration",
+                "wafv2:PutPermissionPolicy",
+                "wafv2:TagResource",
+                "wafv2:UntagResource",
+                "wafv2:UpdateWebACL"
+            ],
+            "Resource": [
+                "*"
+            ]
+        }
+    ]
+}
+
