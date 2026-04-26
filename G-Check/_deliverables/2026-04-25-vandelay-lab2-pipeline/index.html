@@ -1,0 +1,481 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Vandelay Industries — DevOps Pipeline Deliverables</title>
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, monospace;
+      background: #0d1117;
+      color: #c9d1d9;
+      padding: 40px 24px 80px;
+    }
+
+    header {
+      max-width: 1100px;
+      margin: 0 auto 48px;
+      border-bottom: 1px solid #30363d;
+      padding-bottom: 24px;
+    }
+
+    header h1 {
+      font-size: 1.6rem;
+      color: #e6edf3;
+      letter-spacing: 0.02em;
+    }
+
+    header .meta {
+      margin-top: 10px;
+      font-size: 0.82rem;
+      color: #8b949e;
+    }
+
+    header .meta span { margin-right: 20px; }
+
+    .badge {
+      display: inline-block;
+      padding: 2px 10px;
+      border-radius: 12px;
+      font-size: 0.75rem;
+      font-weight: 600;
+      margin-right: 6px;
+      margin-top: 10px;
+    }
+    .badge-green  { background: #1a3a1a; color: #3fb950; border: 1px solid #238636; }
+    .badge-blue   { background: #0c2340; color: #58a6ff; border: 1px solid #1158a7; }
+    .badge-amber  { background: #2d1e00; color: #f0883e; border: 1px solid #9e6a03; }
+    .badge-gray   { background: #21262d; color: #8b949e; border: 1px solid #30363d; }
+
+    section {
+      max-width: 1100px;
+      margin: 0 auto 56px;
+    }
+
+    section h2 {
+      font-size: 1.05rem;
+      color: #e6edf3;
+      border-left: 3px solid #58a6ff;
+      padding-left: 12px;
+      margin-bottom: 20px;
+    }
+
+    section p.desc {
+      font-size: 0.82rem;
+      color: #8b949e;
+      margin-bottom: 20px;
+      padding-left: 15px;
+    }
+
+    .grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+      gap: 16px;
+    }
+
+    .grid.wide {
+      grid-template-columns: repeat(auto-fill, minmax(480px, 1fr));
+    }
+
+    .card {
+      background: #161b22;
+      border: 1px solid #30363d;
+      border-radius: 8px;
+      overflow: hidden;
+      transition: border-color 0.15s;
+    }
+
+    .card:hover { border-color: #58a6ff; }
+
+    .card a { display: block; }
+
+    .card img {
+      width: 100%;
+      display: block;
+      background: #0d1117;
+    }
+
+    .card .label {
+      padding: 10px 14px;
+      font-size: 0.78rem;
+      color: #8b949e;
+      border-top: 1px solid #30363d;
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+    }
+
+    .card .label strong {
+      display: block;
+      color: #c9d1d9;
+      font-size: 0.84rem;
+      margin-bottom: 2px;
+    }
+
+    /* Missing placeholder */
+    .card.missing {
+      border-style: dashed;
+      border-color: #3d2200;
+      opacity: 0.75;
+    }
+
+    .card.missing .placeholder {
+      height: 180px;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      background: #110d00;
+      color: #f0883e;
+      gap: 8px;
+    }
+
+    .card.missing .placeholder .icon { font-size: 2rem; }
+    .card.missing .placeholder .msg  { font-size: 0.78rem; color: #8b949e; text-align: center; padding: 0 12px; }
+
+    .card.missing .label strong { color: #f0883e; }
+
+    /* SVG embed card */
+    .card .svg-wrap {
+      background: #0d1117;
+      overflow: auto;
+      max-height: 420px;
+      padding: 12px;
+    }
+
+    .card .svg-wrap img { max-width: 100%; height: auto; }
+
+    .divider {
+      max-width: 1100px;
+      margin: 0 auto 40px;
+      border: none;
+      border-top: 1px solid #21262d;
+    }
+
+    footer {
+      max-width: 1100px;
+      margin: 60px auto 0;
+      border-top: 1px solid #30363d;
+      padding-top: 20px;
+      font-size: 0.78rem;
+      color: #484f58;
+    }
+  </style>
+</head>
+<body>
+
+<header>
+  <h1>Vandelay Industries &mdash; DevOps Pipeline Deliverables</h1>
+  <div class="meta">
+    <span>Date: 2026-04-25</span>
+    <span>Repo: NRD808Sequence/DevOps</span>
+    <span>Jenkins: jenkins.keepuneat.click</span>
+    <span>App: app.keepuneat.click</span>
+  </div>
+  <div>
+    <span class="badge badge-green">vandelay-lab2-pipeline &mdash; PASSING</span>
+    <span class="badge badge-blue">Jenkins-s3-test &mdash; Build #18</span>
+    <span class="badge badge-amber">RDS screenshot pending</span>
+    <span class="badge badge-gray">Class 7 Armageddon</span>
+  </div>
+</header>
+
+<!-- ── 1. G-CHECK PIPELINE ─────────────────────────────────────────────── -->
+<section>
+  <h2>G-Check Pipeline &mdash; vandelay-lab2-pipeline</h2>
+  <p class="desc">12-stage declarative pipeline: Checkout &rarr; TF Init &rarr; Validate &rarr; Plan &rarr; Approval &rarr; Apply &rarr; Outputs &rarr; Smoke Test &rarr; Gate Tests &rarr; Rover Image &rarr; Rover Graph &rarr; Notify</p>
+  <div class="grid">
+
+    <div class="card">
+      <a href="2026-04-25-vandelay-lab2-pipeline_stage_view.png" target="_blank">
+        <img src="2026-04-25-vandelay-lab2-pipeline_stage_view.png" alt="Stage View">
+      </a>
+      <div class="label"><strong>Stage View</strong>All 12 stages &mdash; build result</div>
+    </div>
+
+    <div class="card">
+      <a href="2026-04-25-vandelay-lab2-pipeline_oceanview.png" target="_blank">
+        <img src="2026-04-25-vandelay-lab2-pipeline_oceanview.png" alt="Blue Ocean View">
+      </a>
+      <div class="label"><strong>Blue Ocean View</strong>Pipeline visualization</div>
+    </div>
+
+    <div class="card">
+      <a href="2026-04-25-vandelay-lab2-pipeline _steps1.png" target="_blank">
+        <img src="2026-04-25-vandelay-lab2-pipeline _steps1.png" alt="Pipeline Steps 1">
+      </a>
+      <div class="label"><strong>Pipeline Steps 1</strong>Step detail &mdash; early stages</div>
+    </div>
+
+    <div class="card">
+      <a href="2026-04-25-vandelay-lab2-pipeline _steps2.png" target="_blank">
+        <img src="2026-04-25-vandelay-lab2-pipeline _steps2.png" alt="Pipeline Steps 2">
+      </a>
+      <div class="label"><strong>Pipeline Steps 2</strong>Step detail &mdash; gate + notify stages</div>
+    </div>
+
+    <div class="card">
+      <a href="2026-04-25-vandelay-lab2-pipeline_terraform_init.png" target="_blank">
+        <img src="2026-04-25-vandelay-lab2-pipeline_terraform_init.png" alt="TF Init">
+      </a>
+      <div class="label"><strong>Terraform Init</strong>S3 backend initialized</div>
+    </div>
+
+    <div class="card">
+      <a href="2026-04-25-vandelay-lab2-pipeline_terraform.png" target="_blank">
+        <img src="2026-04-25-vandelay-lab2-pipeline_terraform.png" alt="TF Plan">
+      </a>
+      <div class="label"><strong>Terraform Plan</strong>No changes &mdash; infrastructure stable</div>
+    </div>
+
+    <div class="card missing">
+      <div class="placeholder">
+        <div class="icon">&#9634;</div>
+        <div class="msg">Jenkins &rarr; vandelay-lab2-pipeline &rarr; build history (classic view)</div>
+      </div>
+      <div class="label"><strong>Classic View &mdash; PENDING</strong>Build history list</div>
+    </div>
+
+    <div class="card missing">
+      <div class="placeholder">
+        <div class="icon">&#9634;</div>
+        <div class="msg">Jenkins &rarr; last successful build &rarr; Console Output</div>
+      </div>
+      <div class="label"><strong>Console Output &mdash; PENDING</strong>Full successful run output</div>
+    </div>
+
+    <div class="card missing">
+      <div class="placeholder">
+        <div class="icon">&#9634;</div>
+        <div class="msg">Jenkins &rarr; build &rarr; Build Artifacts (artifact list page)</div>
+      </div>
+      <div class="label"><strong>Build Artifacts Page &mdash; PENDING</strong>Archived artifacts list</div>
+    </div>
+
+  </div>
+</section>
+
+<hr class="divider">
+
+<!-- ── 2. GATE TEST RESULTS ───────────────────────────────────────────── -->
+<section>
+  <h2>Gate Test Results &mdash; vandelay-lab2-pipeline</h2>
+  <p class="desc">Gate 1: Secrets Manager + EC2 IAM role &mdash; Gate 2: RDS network isolation &mdash; Combined badge: GREEN</p>
+  <div class="grid">
+
+    <div class="card missing">
+      <div class="placeholder">
+        <div class="icon">&#9634;</div>
+        <div class="msg">Jenkins &rarr; build &rarr; Artifacts &rarr; gate_secrets_and_role.json</div>
+      </div>
+      <div class="label"><strong>Gate 1 &mdash; Secrets + Role &mdash; PENDING</strong>PASS: vandelay-ec2-role01 verified</div>
+    </div>
+
+    <div class="card missing">
+      <div class="placeholder">
+        <div class="icon">&#9634;</div>
+        <div class="msg">Jenkins &rarr; build &rarr; Artifacts &rarr; gate_network_db.json</div>
+      </div>
+      <div class="label"><strong>Gate 2 &mdash; Network + RDS &mdash; PENDING</strong>PASS: RDS private, SG-to-SG only</div>
+    </div>
+
+    <div class="card missing">
+      <div class="placeholder">
+        <div class="icon">&#9634;</div>
+        <div class="msg">Jenkins &rarr; build &rarr; Artifacts &rarr; gate_result.json</div>
+      </div>
+      <div class="label"><strong>Combined Gate Result &mdash; PENDING</strong>BADGE: GREEN &mdash; exit_code: 0</div>
+    </div>
+
+  </div>
+</section>
+
+<hr class="divider">
+
+<!-- ── 3. JENKINS S3 TEST PIPELINE ────────────────────────────────────── -->
+<section>
+  <h2>Jenkins S3 Test Pipeline &mdash; jenkins-s3-test</h2>
+  <p class="desc">Separate pipeline validating JenkinsTest01 IAM role, S3 bucket provisioning via Terraform, and artifact upload. Build #18 last successful.</p>
+  <div class="grid">
+
+    <div class="card">
+      <a href="2026-04-25-Jenkins-s3-test_stage_view.png" target="_blank">
+        <img src="2026-04-25-Jenkins-s3-test_stage_view.png" alt="S3 Test Stage View">
+      </a>
+      <div class="label"><strong>Stage View</strong>Build #18 &mdash; SUCCESS</div>
+    </div>
+
+    <div class="card">
+      <a href="2026-04-25-Jenkins-s3-test_blueocean.png" target="_blank">
+        <img src="2026-04-25-Jenkins-s3-test_blueocean.png" alt="S3 Test Blue Ocean">
+      </a>
+      <div class="label"><strong>Blue Ocean View</strong>Pipeline visualization</div>
+    </div>
+
+    <div class="card">
+      <a href="2026-04-25-Jenkins-s3-test_pipeline_steps.png" target="_blank">
+        <img src="2026-04-25-Jenkins-s3-test_pipeline_steps.png" alt="S3 Test Pipeline Steps">
+      </a>
+      <div class="label"><strong>Pipeline Steps</strong>All steps passing</div>
+    </div>
+
+    <div class="card">
+      <a href="2026-04-25-Jenkins-s3-test_last_succesful_build18.png" target="_blank">
+        <img src="2026-04-25-Jenkins-s3-test_last_succesful_build18.png" alt="Last Successful Build 18">
+      </a>
+      <div class="label"><strong>Last Successful Build #18</strong>Build history</div>
+    </div>
+
+    <div class="card">
+      <a href="2026-04-25-Jenkins-s3-test_artifacts.png" target="_blank">
+        <img src="2026-04-25-Jenkins-s3-test_artifacts.png" alt="S3 Test Artifacts">
+      </a>
+      <div class="label"><strong>Build Artifacts</strong>pike-policy.json archived</div>
+    </div>
+
+    <div class="card">
+      <a href="2026-04-25-Jenkins-s3-test_console_output_jenkinstest01_aws_arn.png" target="_blank">
+        <img src="2026-04-25-Jenkins-s3-test_console_output_jenkinstest01_aws_arn.png" alt="Console Output ARN">
+      </a>
+      <div class="label"><strong>Console Output &mdash; JenkinsTest01 ARN</strong>IAM identity confirmed</div>
+    </div>
+
+  </div>
+</section>
+
+<hr class="divider">
+
+<!-- ── 4. AWS CONSOLE EVIDENCE ────────────────────────────────────────── -->
+<section>
+  <h2>AWS Console Evidence &mdash; us-east-1</h2>
+  <p class="desc">Infrastructure running in account 212809501772. VPC: vandelay-vpc01. All resources managed by Terraform via Jenkins pipeline.</p>
+  <div class="grid">
+
+    <div class="card">
+      <a href="2026-04-25-ec2_aws_alb.png" target="_blank">
+        <img src="2026-04-25-ec2_aws_alb.png" alt="ALBs">
+      </a>
+      <div class="label"><strong>Load Balancers</strong>vandelay-alb01 + vandelay-jenkins-alb</div>
+    </div>
+
+    <div class="card">
+      <a href="2026-04-25-ec2_aws_sg_jenkins.png" target="_blank">
+        <img src="2026-04-25-ec2_aws_sg_jenkins.png" alt="Security Groups">
+      </a>
+      <div class="label"><strong>Security Groups &mdash; Jenkins Behind ALB</strong>Port 8080 restricted to ALB SG only</div>
+    </div>
+
+    <div class="card">
+      <a href="2026-04-25-ec2_aws_vpc_map.png" target="_blank">
+        <img src="2026-04-25-ec2_aws_vpc_map.png" alt="VPC Resource Map">
+      </a>
+      <div class="label"><strong>VPC Resource Map</strong>vandelay-vpc01 &mdash; subnets, routes, IGW</div>
+    </div>
+
+    <div class="card">
+      <a href="2026-04-25-ec2_aws_dns.png" target="_blank">
+        <img src="2026-04-25-ec2_aws_dns.png" alt="DNS / Route53">
+      </a>
+      <div class="label"><strong>DNS / Route53</strong>keepuneat.click hosted zone</div>
+    </div>
+
+    <div class="card">
+      <a href="2026-04-25-aws_console_public_bucket.png" target="_blank">
+        <img src="2026-04-25-aws_console_public_bucket.png" alt="S3 Public Deliverables Bucket">
+      </a>
+      <div class="label"><strong>S3 Public Deliverables Bucket</strong>Terraform-provisioned public bucket</div>
+    </div>
+
+    <div class="card missing">
+      <div class="placeholder">
+        <div class="icon">&#9634;</div>
+        <div class="msg">AWS &rarr; EC2 &rarr; Instances &rarr; filter running</div>
+      </div>
+      <div class="label"><strong>EC2 Instances &mdash; PENDING</strong>Jenkins + app instances running</div>
+    </div>
+
+    <div class="card missing">
+      <div class="placeholder">
+        <div class="icon">&#9634;</div>
+        <div class="msg">AWS &rarr; RDS &rarr; Databases &rarr; vandelay-rds01</div>
+      </div>
+      <div class="label"><strong>RDS &mdash; vandelay-rds01 &mdash; PENDING</strong>MySQL 8.4.8, private, encryption enabled</div>
+    </div>
+
+  </div>
+</section>
+
+<hr class="divider">
+
+<!-- ── 5. APP + WEBHOOKS ──────────────────────────────────────────────── -->
+<section>
+  <h2>App &amp; Webhooks</h2>
+  <p class="desc">Live app at app.keepuneat.click via CloudFront + WAF. Webhooks trigger both pipelines automatically on push to NRD808Sequence/DevOps main.</p>
+  <div class="grid">
+
+    <div class="card">
+      <a href="app.keepuneat.click.png" target="_blank">
+        <img src="app.keepuneat.click.png" alt="App Live">
+      </a>
+      <div class="label"><strong>app.keepuneat.click</strong>Flask app live &mdash; CloudFront + WAF</div>
+    </div>
+
+    <div class="card">
+      <a href="2026-04-25-webhook_git.png" target="_blank">
+        <img src="2026-04-25-webhook_git.png" alt="GitHub Webhook">
+      </a>
+      <div class="label"><strong>GitHub Webhook</strong>NRD808Sequence/DevOps &rarr; Jenkins</div>
+    </div>
+
+    <div class="card">
+      <a href="2026-04-25-webhook.png" target="_blank">
+        <img src="2026-04-25-webhook.png" alt="Jenkins Webhook Config">
+      </a>
+      <div class="label"><strong>Jenkins Webhook Config</strong>githubPush() trigger configured</div>
+    </div>
+
+    <div class="card">
+      <a href="2026-04-25-both_pipelines_embedded_plugin_git.png" target="_blank">
+        <img src="2026-04-25-both_pipelines_embedded_plugin_git.png" alt="Both Pipelines Embedded Plugin">
+      </a>
+      <div class="label"><strong>Both Pipelines &mdash; Embedded Plugin (Git)</strong>vandelay-lab2 + Jenkins-s3-test in README</div>
+    </div>
+
+  </div>
+</section>
+
+<hr class="divider">
+
+<!-- ── 6. TERRAFORM DIAGRAMS ──────────────────────────────────────────── -->
+<section>
+  <h2>Terraform Infrastructure Diagram &mdash; Rover</h2>
+  <p class="desc">Generated by Rover running inside Docker on the Jenkins EC2 (rover-tf-1.5.7). Dark mode post-processed by python/rover_darkmode.py.</p>
+  <div class="grid wide">
+
+    <div class="card">
+      <div class="svg-wrap">
+        <img src="artifacts/rover_dark.svg" alt="Rover Dark Mode">
+      </div>
+      <div class="label"><strong>Rover Graph &mdash; Dark Mode</strong>Full infrastructure dependency graph</div>
+    </div>
+
+    <div class="card">
+      <div class="svg-wrap">
+        <img src="artifacts/rover.svg" alt="Rover Original">
+      </div>
+      <div class="label"><strong>Rover Graph &mdash; Original</strong>Light mode reference</div>
+    </div>
+
+  </div>
+</section>
+
+<footer>
+  NRD808Sequence &middot; DevOps &middot; Class 7 Armageddon &middot; 2026-04-25 &middot;
+  Jenkins: jenkins.keepuneat.click &middot;
+  Repo: NRD808Sequence/DevOps
+</footer>
+
+</body>
+</html>
