@@ -86,9 +86,9 @@ resource "aws_s3_bucket_policy" "vandelay_deliverables_policy" {
 resource "aws_s3_object" "vandelay_deliverables_index" {
   bucket       = aws_s3_bucket.vandelay_deliverables.id
   key          = "index.html"
-  source       = "${path.module}/website/index.html"
+  source       = "${path.module}/_deliverables/2026-04-25-vandelay-lab2-pipeline/index.html"
   content_type = "text/html"
-  etag         = filemd5("${path.module}/website/index.html")
+  etag         = filemd5("${path.module}/_deliverables/2026-04-25-vandelay-lab2-pipeline/index.html")
 
   depends_on = [aws_s3_bucket_policy.vandelay_deliverables_policy]
 }
