@@ -25,11 +25,17 @@ import re
 REPLACEMENTS = [
     # Order matters — most specific first, then general
 
+    # ── Canvas background (rover's full-graph background rect) ──────────────
+    (r'fill="rgb\(244,236,255\)"',  'fill="rgb(38,42,50)"'),       # rover canvas bg → blue-slate
+
     # ── Node fill backgrounds (light pastels → deep darks) ──────────────────
-    (r'fill="rgb\(255,247,224\)"',  'fill="rgb(30,22,0)"'),       # amber bg
+    (r'fill="rgb\(255,247,224\)"',  'fill="rgb(30,22,0)"'),        # amber bg
     (r'fill="rgb\(225,240,255\)"',  'fill="rgb(4,21,44)"'),        # blue bg
     (r'fill="rgb\(255,236,236\)"',  'fill="rgb(40,0,12)"'),        # red/pink bg
     (r'fill="rgb\(255,255,255\)"',  'fill="rgb(22,25,33)"'),        # white node fills → dark card
+
+    # ── White strokes (rover uses white as separator/knockout stroke) ────────
+    (r'stroke="rgb\(255,255,255\)"','stroke="rgb(38,42,50)"'),     # white strokes → canvas color
 
     # ── Text / label fills ───────────────────────────────────────────────────
     (r'fill="rgb\(0,0,0\)"',        'fill="rgb(201,209,217)"'),    # black text → light
