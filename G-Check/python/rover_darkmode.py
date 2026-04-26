@@ -6,7 +6,8 @@ Usage:
     python3 rover_darkmode.py rover.svg rover_dark.svg
 
 Color map (light → dark):
-    Background  rgb(255,255,255) → rgb(38,42,50)       blue-slate (#262a32)
+    Background  rgb(255,255,255) → rgb(22,25,33)       dark card (nodes float on canvas)
+    Canvas      BACKGROUND_RECT  → rgb(38,42,50)       blue-slate canvas (#262a32)
     Text        rgb(0,0,0)       → rgb(201,209,217)   off-white
     Edges/gray  rgb(211,211,211) → rgb(48,54,61)      dark border gray
     Edge stroke rgb(0,0,0)       → rgb(100,110,120)   readable gray lines
@@ -28,7 +29,7 @@ REPLACEMENTS = [
     (r'fill="rgb\(255,247,224\)"',  'fill="rgb(30,22,0)"'),       # amber bg
     (r'fill="rgb\(225,240,255\)"',  'fill="rgb(4,21,44)"'),        # blue bg
     (r'fill="rgb\(255,236,236\)"',  'fill="rgb(40,0,12)"'),        # red/pink bg
-    (r'fill="rgb\(255,255,255\)"',  'fill="rgb(38,42,50)"'),        # white → blue-slate
+    (r'fill="rgb\(255,255,255\)"',  'fill="rgb(22,25,33)"'),        # white node fills → dark card
 
     # ── Text / label fills ───────────────────────────────────────────────────
     (r'fill="rgb\(0,0,0\)"',        'fill="rgb(201,209,217)"'),    # black text → light
