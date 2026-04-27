@@ -1,0 +1,257 @@
+direction: right
+
+# ── CICD ─────────────────────────────────────────────────────────────────────
+cicd: {
+  label: "CI/CD — GitHub"
+  style.fill: "#161b22"
+  style.stroke: "#8957e5"
+
+  github: {
+    label: "GitHub\nNRD808Sequence/DevOps\nbranch: main"
+    shape: rectangle
+    style.fill: "#21262d"
+    style.stroke: "#8957e5"
+    style.font-color: "#c9d1d9"
+  }
+}
+
+# ── DNS / CDN ─────────────────────────────────────────────────────────────────
+cdn: {
+  label: "DNS & CDN Layer"
+  style.fill: "#0d2137"
+  style.stroke: "#1f6feb"
+
+  route53: {
+    label: "Route53\nkeeuneat.click\nZ07421622AG1WUIDW7VC3"
+    shape: cylinder
+    style.fill: "#1a3a5c"
+    style.font-color: "#c9d1d9"
+  }
+
+  cf: {
+    label: "CloudFront\nE1S240PLQQ8HKJ\ndm25gk8mq996u.cloudfront.net"
+    style.fill: "#1a3a5c"
+    style.font-color: "#c9d1d9"
+  }
+
+  waf_cf: {
+    label: "WAF (CloudFront)\nvandelay-cf-waf01\nglobal us-east-1"
+    style.fill: "#2d1a4d"
+    style.font-color: "#c9d1d9"
+  }
+
+  acm: {
+    label: "ACM Certificate\n*.keepuneat.click\nkeeuneat.click"
+    style.fill: "#1a3a5c"
+    style.font-color: "#c9d1d9"
+  }
+}
+
+# ── VPC ───────────────────────────────────────────────────────────────────────
+vpc: {
+  label: "VPC  vpc-0036da521c2f5ba73  |  10.0.0.0/16  |  us-east-1"
+  style.fill: "#0d1a0d"
+  style.stroke: "#2ea043"
+
+  public: {
+    label: "Public Subnets  (us-east-1a / us-east-1b)"
+    style.fill: "#1a2e1a"
+    style.stroke: "#3fb950"
+
+    igw: {
+      label: "Internet Gateway\nigw-073bca7a56723d652"
+      style.fill: "#1f4d1f"
+      style.font-color: "#c9d1d9"
+    }
+
+    nat: {
+      label: "NAT Gateway\nnat-07eee3f20c4efa5a5\nEIP eipalloc-0e825b651c41252cc\n~\$32/month"
+      style.fill: "#4d2e00"
+      style.stroke: "#e3b341"
+      style.font-color: "#c9d1d9"
+    }
+
+    alb_app: {
+      label: "App ALB\nvandelay-alb01\nWAF regional attached\ndeletion_protection = true"
+      style.fill: "#1f4d1f"
+      style.font-color: "#c9d1d9"
+    }
+
+    alb_jenkins: {
+      label: "Jenkins ALB\nvandelay-jenkins-alb\njenkins.keepuneat.click\nHTTP→HTTPS redirect"
+      style.fill: "#1f4d1f"
+      style.font-color: "#c9d1d9"
+    }
+
+    waf_regional: {
+      label: "WAF (Regional)\nvandelay-waf01\nALB association"
+      style.fill: "#2d1a4d"
+      style.font-color: "#c9d1d9"
+    }
+  }
+
+  private: {
+    label: "Private Subnets  (us-east-1a / us-east-1b)"
+    style.fill: "#0d1a2e"
+    style.stroke: "#58a6ff"
+
+    jenkins: {
+      label: "Jenkins EC2\ni-0ea63c7bf813933c8\nt3.medium\nlifecycle: ignore_changes=[user_data,ami]\nrover-tf-1.5.7:latest (Docker)"
+      style.fill: "#1f2d4d"
+      style.font-color: "#c9d1d9"
+    }
+
+    ebs: {
+      label: "Jenkins EBS Data\nvol-04b9c1b1e6f182b3f\nJobs + Credentials + Plugins\nSnapshot before terminate"
+      shape: cylinder
+      style.fill: "#1f2d4d"
+      style.stroke: "#e3b341"
+      style.font-color: "#c9d1d9"
+    }
+
+    ec2_app: {
+      label: "App EC2\ni-05ed1e67ab4e88ed8\nt3.micro\nFlask app\napp.keepuneat.click"
+      style.fill: "#1f2d4d"
+      style.font-color: "#c9d1d9"
+    }
+
+    ec2_private: {
+      label: "Private Bonus EC2\ni-0d2044851f3ab9a85\nt3.micro"
+      style.fill: "#1f2d4d"
+      style.font-color: "#c9d1d9"
+    }
+
+    rds: {
+      label: "RDS MySQL\nvandelay-rds01\ndb.t3.micro / 20GB\nNot publicly accessible\nSecret rotation enabled\nFinal snapshot on destroy"
+      shape: cylinder
+      style.fill: "#2d1f1f"
+      style.stroke: "#f85149"
+      style.font-color: "#c9d1d9"
+    }
+
+    vpce: {
+      label: "VPC Interface Endpoints  (~\$51/month)\nSSM  |  SSMMessages  |  EC2Messages\nSecrets Manager  |  KMS\nCloudWatch Logs  |  Monitoring\n+ S3 Gateway (free)"
+      style.fill: "#2d1f4d"
+      style.stroke: "#8957e5"
+      style.font-color: "#c9d1d9"
+    }
+  }
+}
+
+# ── Security & Identity ───────────────────────────────────────────────────────
+security: {
+  label: "Security & Identity"
+  style.fill: "#1f0d0d"
+  style.stroke: "#f85149"
+
+  sm: {
+    label: "Secrets Manager\nlab/rds/mysql\nRotation Lambda enabled\nlab/rds/mysql-x7lYie"
+    style.fill: "#3d1a1a"
+    style.font-color: "#c9d1d9"
+  }
+
+  ssm: {
+    label: "SSM Parameter Store\n/vandelay/db/endpoint\n/vandelay/db/port\n/vandelay/db/name\n/lab/db/*"
+    style.fill: "#3d1a1a"
+    style.font-color: "#c9d1d9"
+  }
+
+  iam: {
+    label: "IAM\nvandelay-jenkins-role\nvandelay-ec2-role01\nvandelay-incident-reporter-role\nvandelay-rotation-lambda-role"
+    style.fill: "#3d1a1a"
+    style.font-color: "#c9d1d9"
+  }
+}
+
+# ── Observability ─────────────────────────────────────────────────────────────
+observability: {
+  label: "Observability"
+  style.fill: "#0d1f1f"
+  style.stroke: "#39d353"
+
+  cw: {
+    label: "CloudWatch\nDashboard: vandelay-dashboard01\nAlarm: vandelay-db-connection-failure\nAlarm: vandelay-alb-5xx-alarm\nLog: /aws/ec2/vandelay-rds-app\nLog: aws-waf-logs-vandelay-webacl"
+    style.fill: "#1a3d3d"
+    style.font-color: "#c9d1d9"
+  }
+
+  ct: {
+    label: "CloudTrail\nvandelay-trail\nS3: vandelay-cloudtrail-212809501772"
+    style.fill: "#1a3d3d"
+    style.font-color: "#c9d1d9"
+  }
+
+  sns: {
+    label: "SNS Topics\nvandelay-notifications\nvandelay-db-incidents"
+    style.fill: "#1a3d3d"
+    style.font-color: "#c9d1d9"
+  }
+
+  lambda: {
+    label: "Incident Reporter Lambda\nvandelay-incident-reporter\nBedrock + SNS integration\nS3: vandelay-incident-reports-212809501772"
+    style.fill: "#1a3d3d"
+    style.font-color: "#c9d1d9"
+  }
+}
+
+# ── Storage ───────────────────────────────────────────────────────────────────
+storage: {
+  label: "S3 Storage"
+  style.fill: "#1f1a0d"
+  style.stroke: "#e3b341"
+
+  tf_state: {
+    label: "TF State Bucket\nclass7-armagaggeon-tf-bucket\nVersioning + SSE-KMS\nNEVER DESTROY"
+    shape: cylinder
+    style.fill: "#4d3a00"
+    style.stroke: "#e3b341"
+    style.font-color: "#c9d1d9"
+  }
+
+  deliverables: {
+    label: "Deliverables Bucket\nvandelay-deliverables-212809501772\nPublic static website\nindex.html gallery"
+    shape: cylinder
+    style.fill: "#3d2e00"
+    style.font-color: "#c9d1d9"
+  }
+
+  alb_logs: {
+    label: "ALB Logs\nvandelay-alb-logs-212809501772\nVersioning enabled"
+    shape: cylinder
+    style.fill: "#3d2e00"
+    style.font-color: "#c9d1d9"
+  }
+
+  cloudtrail_s3: {
+    label: "CloudTrail Logs\nvandelay-cloudtrail-212809501772"
+    shape: cylinder
+    style.fill: "#3d2e00"
+    style.font-color: "#c9d1d9"
+  }
+}
+
+# ── Connections ───────────────────────────────────────────────────────────────
+cicd.github -> cdn.route53: "webhook push\ngithub-creds PAT"
+cdn.route53 -> cdn.cf: "app.keepuneat.click\nA alias"
+cdn.route53 -> vpc.public.alb_jenkins: "jenkins.keepuneat.click\nA alias"
+cdn.cf -> cdn.waf_cf: inspect
+cdn.waf_cf -> vpc.public.alb_app: "origin request\nX-Origin-Verify header"
+cdn.acm -> cdn.cf: "TLS"
+cdn.acm -> vpc.public.alb_jenkins: "TLS"
+vpc.public.alb_app -> vpc.public.waf_regional: inspect
+vpc.public.waf_regional -> vpc.private.ec2_app: "HTTP 8080"
+vpc.public.alb_jenkins -> vpc.private.jenkins: "HTTP 8080"
+vpc.public.igw -> vpc.public.nat: egress
+vpc.public.nat -> vpc.private.jenkins: NAT
+vpc.private.jenkins -> vpc.private.ebs: "data volume"
+vpc.private.jenkins -> vpc.private.rds: "MySQL 3306"
+vpc.private.ec2_app -> vpc.private.rds: "MySQL 3306"
+vpc.private.jenkins -> vpc.private.vpce: "AWS API calls"
+vpc.private.vpce -> security.sm: "GetSecretValue"
+vpc.private.vpce -> security.ssm: "GetParameter"
+vpc.private.jenkins -> storage.tf_state: "TF backend\nS3 + DynamoDB lock"
+vpc.private.jenkins -> observability.sns: "pipeline notify"
+observability.sns -> observability.lambda: "db incident trigger"
+observability.lambda -> storage.deliverables: "incident report"
+vpc.private.ec2_app -> observability.cw: "app logs"
+vpc.public.alb_app -> storage.alb_logs: "access logs"
