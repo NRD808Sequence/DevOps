@@ -94,17 +94,47 @@ resource "aws_s3_object" "vandelay_deliverables_index" {
 }
 
 locals {
-  deliverable_screenshots = fileset("${path.module}/_deliverables", "**/*.png")
+  deliverable_screenshots = fileset("${path.module}/_deliverables/2026-04-25-vandelay-lab2-pipeline", "*.png")
 }
+
+############################################
+# PNGs — uploaded at bucket root so bare
+# filenames in index.html resolve correctly.
+############################################
 
 resource "aws_s3_object" "deliverable_screenshots" {
   for_each = local.deliverable_screenshots
 
   bucket       = aws_s3_bucket.vandelay_deliverables.id
-  key          = "deliverables/${each.value}"
-  source       = "${path.module}/_deliverables/${each.value}"
+  key          = each.value
+  source       = "${path.module}/_deliverables/2026-04-25-vandelay-lab2-pipeline/${each.value}"
   content_type = "image/png"
-  etag         = filemd5("${path.module}/_deliverables/${each.value}")
+  etag         = filemd5("${path.module}/_deliverables/2026-04-25-vandelay-lab2-pipeline/${each.value}")
+
+  depends_on = [aws_s3_bucket_policy.vandelay_deliverables_policy]
+}
+
+############################################
+# SVG artifacts — uploaded under artifacts/
+# so index.html src="artifacts/rover*.svg" works.
+############################################
+
+resource "aws_s3_object" "rover_dark_svg" {
+  bucket       = aws_s3_bucket.vandelay_deliverables.id
+  key          = "artifacts/rover_dark.svg"
+  source       = "${path.module}/_deliverables/2026-04-25-vandelay-lab2-pipeline/artifacts/rover_dark.svg"
+  content_type = "image/svg+xml"
+  etag         = filemd5("${path.module}/_deliverables/2026-04-25-vandelay-lab2-pipeline/artifacts/rover_dark.svg")
+
+  depends_on = [aws_s3_bucket_policy.vandelay_deliverables_policy]
+}
+
+resource "aws_s3_object" "rover_svg" {
+  bucket       = aws_s3_bucket.vandelay_deliverables.id
+  key          = "artifacts/rover.svg"
+  source       = "${path.module}/_deliverables/2026-04-25-vandelay-lab2-pipeline/artifacts/rover.svg"
+  content_type = "image/svg+xml"
+  etag         = filemd5("${path.module}/_deliverables/2026-04-25-vandelay-lab2-pipeline/artifacts/rover.svg")
 
   depends_on = [aws_s3_bucket_policy.vandelay_deliverables_policy]
 }
