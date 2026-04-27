@@ -22,6 +22,7 @@ tfplan.txt
 # Build artifacts
 **/lambda/*.zip
 rover.svg
+!_deliverables/**/artifacts/rover.svg
 **/python/gate_*.json
 **/*.jar
 
